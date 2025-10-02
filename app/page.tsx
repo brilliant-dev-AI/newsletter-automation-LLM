@@ -18,29 +18,37 @@ export default function Home() {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([
     {
       id: "1",
-      url: "https://example.com/newsletter",
+      url: "https://www.producthunt.com/newsletter",
       status: "completed" as const,
       email: "demo@example.com",
-      linksCount: 15,
+      linksCount: 0, // No links extracted yet - email processing not implemented
       lastProcessed: "2024-01-15T10:30:00Z",
       framework: "playwright" as const
     },
     {
       id: "2", 
-      url: "https://techcrunch.com/newsletter",
-      status: "processing" as const,
+      url: "https://www.axios.com/newsletters",
+      status: "completed" as const,
       email: "demo@example.com",
-      linksCount: 0,
-      lastProcessed: null,
+      linksCount: 0, // No links extracted yet - email processing not implemented
+      lastProcessed: "2024-01-14T15:45:00Z",
       framework: "skyvern" as const
+    },
+    {
+      id: "3",
+      url: "https://www.techcrunch.com/newsletters/",
+      status: "completed" as const,
+      email: "demo@example.com",
+      linksCount: 0, // No links extracted yet - email processing not implemented
+      lastProcessed: "2024-01-13T09:20:00Z",
+      framework: "browserbase" as const
     }
   ]);
 
   const handleSubmit = async (url: string, email: string, framework: "playwright" | "skyvern" | "browserbase") => {
-    // This will be implemented when we add the backend
     console.log("Submitting newsletter signup:", { url, email, framework });
     
-    // Add to local state for now
+    // Add to local state immediately
     const newNewsletter: Newsletter = {
       id: Date.now().toString(),
       url,
@@ -52,6 +60,60 @@ export default function Home() {
     };
     
     setNewsletters(prev => [newNewsletter, ...prev]);
+
+    // Update status to processing
+    setNewsletters(prev => prev.map(n => 
+      n.id === newNewsletter.id 
+        ? { ...n, status: "processing" as const }
+        : n
+    ));
+
+    try {
+      // Call our automation API
+      const response = await fetch('/api/automate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url, email, framework }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update the newsletter status to completed
+        setNewsletters(prev => prev.map(n => 
+          n.id === newNewsletter.id 
+            ? { 
+                ...n, 
+                status: "completed" as const,
+                linksCount: data.result.success ? 1 : 0,
+                lastProcessed: new Date().toISOString()
+              }
+            : n
+        ));
+        
+        console.log("✅ Automation completed:", data.result);
+      } else {
+        // Update status to error
+        setNewsletters(prev => prev.map(n => 
+          n.id === newNewsletter.id 
+            ? { ...n, status: "error" as const }
+            : n
+        ));
+        
+        console.error("❌ Automation failed:", data.error);
+      }
+    } catch (error) {
+      // Update status to error
+      setNewsletters(prev => prev.map(n => 
+        n.id === newNewsletter.id 
+          ? { ...n, status: "error" as const }
+          : n
+      ));
+      
+      console.error("❌ API call failed:", error);
+    }
   };
 
   return (
