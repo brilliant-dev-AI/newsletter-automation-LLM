@@ -5,10 +5,15 @@
   "scripts": {
     "build": "next build --turbopack",
     "dev": "next dev --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "test:automation": "node test-automation.js",
+    "test:producthunt": "node test-single.js",
+    "install:browsers": "npx playwright install"
   },
   "dependencies": {
+    "@playwright/test": "^1.55.1",
     "next": "15.5.4",
+    "playwright": "^1.55.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "sst": "3.17.14"
