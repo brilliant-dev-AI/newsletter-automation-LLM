@@ -16,33 +16,7 @@ interface Newsletter {
 
 export default function Home() {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([
-    {
-      id: "1",
-      url: "https://www.producthunt.com/newsletter",
-      status: "completed" as const,
-      email: "demo@example.com",
-      linksCount: 0, // No links extracted yet - email processing not implemented
-      lastProcessed: "2024-01-15T10:30:00Z",
-      framework: "playwright" as const
-    },
-    {
-      id: "2", 
-      url: "https://www.axios.com/newsletters",
-      status: "completed" as const,
-      email: "demo@example.com",
-      linksCount: 0, // No links extracted yet - email processing not implemented
-      lastProcessed: "2024-01-14T15:45:00Z",
-      framework: "skyvern" as const
-    },
-    {
-      id: "3",
-      url: "https://www.techcrunch.com/newsletters/",
-      status: "completed" as const,
-      email: "demo@example.com",
-      linksCount: 0, // No links extracted yet - email processing not implemented
-      lastProcessed: "2024-01-13T09:20:00Z",
-      framework: "browserbase" as const
-    }
+    // Demo data removed - start with empty state to show real functionality
   ]);
 
   const handleSubmit = async (url: string, email: string, framework: "playwright" | "skyvern" | "browserbase") => {
