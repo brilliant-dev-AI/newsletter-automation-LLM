@@ -12,8 +12,8 @@ export default $config({
   async run() {
     const web = new sst.aws.Nextjs("MyWeb", {
       environment: {
-        // Browser automation config for all frameworks (Playwright, Skyvern, Browserbase)
-        PLAYWRIGHT_BROWSERS_PATH: "/tmp/playwright-browsers"
+        // Lambda-optimized Playwright handles browser binaries automatically
+        NODE_ENV: "production"
       }
     });
 
