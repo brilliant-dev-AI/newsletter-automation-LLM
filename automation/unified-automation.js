@@ -65,7 +65,7 @@ class UnifiedAutomationService {
     
     try {
       // Navigate to the page
-      await this.page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+      await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Find and fill email input
