@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
 
     console.log(`🚀 Starting automation for ${framework} on ${url}`);
     
-    // Run the automation with timeout
-    const automationPromise = runAutomation(url, email, framework);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Automation timeout after 25 seconds')), 25000)
-    );
+            // Run the automation with timeout
+            const automationPromise = runAutomation(url, email, framework);
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Automation timeout after 55 seconds')), 55000)
+            );
     
     const result = await Promise.race([automationPromise, timeoutPromise]);
     

@@ -12,6 +12,7 @@ interface Newsletter {
   linksCount: number;
   lastProcessed: string | null;
   framework: "playwright" | "skyvern" | "browserbase";
+  errorMessage?: string;
 }
 
 export default function Home() {
@@ -54,29 +55,33 @@ export default function Home() {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        // Update the newsletter status to completed
+      if (response.ok && data.success && data.result.success) {
+        // Update the newsletter status to completed only if automation actually succeeded
         setNewsletters(prev => prev.map(n => 
           n.id === newNewsletter.id 
             ? { 
                 ...n, 
                 status: "completed" as const,
-                linksCount: data.result.success ? 1 : 0,
+                linksCount: 1,
                 lastProcessed: new Date().toISOString()
               }
             : n
         ));
         
-        console.log("✅ Automation completed:", data.result);
+        console.log("✅ Automation completed successfully:", data.result);
       } else {
-        // Update status to error
+        // Update status to error if automation failed
         setNewsletters(prev => prev.map(n => 
           n.id === newNewsletter.id 
-            ? { ...n, status: "error" as const }
+            ? { 
+                ...n, 
+                status: "error" as const,
+                errorMessage: data.result?.error || data.error || "Automation failed"
+              }
             : n
         ));
         
-        console.error("❌ Automation failed:", data.error);
+        console.error("❌ Automation failed:", data.result?.error || data.error);
       }
     } catch (error) {
       // Update status to error
