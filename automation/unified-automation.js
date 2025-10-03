@@ -15,10 +15,35 @@ class UnifiedAutomationService {
 
   async init() {
     console.log('🚀 Initializing Unified Automation Service...');
-    this.browser = await chromium.launch({ 
-      headless: true, // Headless for production
-      slowMo: 500
-    });
+    
+    // Configure Playwright for Lambda environment
+    const launchOptions = {
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
+    };
+
+    // Try to install browsers if not available
+    try {
+      this.browser = await chromium.launch(launchOptions);
+    } catch (error) {
+      if (error.message.includes("Executable doesn't exist")) {
+        console.log('📦 Installing Playwright browsers...');
+        const { execSync } = require('child_process');
+        execSync('npx playwright install chromium', { stdio: 'inherit' });
+        this.browser = await chromium.launch(launchOptions);
+      } else {
+        throw error;
+      }
+    }
+    
     this.page = await this.browser.newPage();
     
     // Set viewport and user agent
