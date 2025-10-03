@@ -26,19 +26,31 @@ class UnifiedAutomationService {
         '--disable-accelerated-2d-canvas',
         '--no-first-run',
         '--no-zygote',
-        '--disable-gpu'
-      ]
+        '--disable-gpu',
+        '--single-process',
+        '--no-zygote',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding'
+      ],
+      timeout: 30000 // 30 second timeout
     };
 
-    // Try to install browsers if not available
+    // Set custom browser path for Lambda if provided
+    if (process.env.PLAYWRIGHT_BROWSERS_PATH) {
+      console.log('🔧 Using custom browser path:', process.env.PLAYWRIGHT_BROWSERS_PATH);
+    }
+
+    // Launch browser with Lambda optimization
     try {
       this.browser = await chromium.launch(launchOptions);
+      console.log('✅ Browser launched successfully');
     } catch (error) {
+      console.error('❌ Browser launch failed:', error.message);
+      
+      // For Lambda, we should fail fast rather than trying to install
       if (error.message.includes("Executable doesn't exist")) {
-        console.log('📦 Installing Playwright browsers...');
-        const { execSync } = require('child_process');
-        execSync('npx playwright install chromium', { stdio: 'inherit' });
-        this.browser = await chromium.launch(launchOptions);
+        throw new Error(`Browser not available on Lambda. Please ensure Playwright browsers are pre-installed or use a Lambda layer. Original error: ${error.message}`);
       } else {
         throw error;
       }

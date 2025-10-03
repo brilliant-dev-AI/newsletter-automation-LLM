@@ -14,8 +14,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`🚀 Starting automation for ${framework} on ${url}`);
     
-    // Run the automation
-    const result = await runAutomation(url, email, framework);
+    // Run the automation with timeout
+    const automationPromise = runAutomation(url, email, framework);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Automation timeout after 25 seconds')), 25000)
+    );
+    
+    const result = await Promise.race([automationPromise, timeoutPromise]);
     
     console.log(`✅ Automation completed for ${framework}`);
     
@@ -27,9 +32,21 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ Automation API error:', error);
     
+    // Handle specific Lambda/browser errors
+    let errorMessage = 'Automation failed';
+    if (error instanceof Error) {
+      if (error.message.includes('Browser not available on Lambda')) {
+        errorMessage = 'Browser not available on AWS Lambda. This is a deployment configuration issue.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Automation timed out. The website may be slow or unresponsive.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return NextResponse.json(
       { 
-        error: 'Automation failed',
+        error: errorMessage,
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

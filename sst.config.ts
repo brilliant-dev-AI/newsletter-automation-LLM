@@ -12,13 +12,9 @@ export default $config({
   async run() {
     const web = new sst.aws.Nextjs("MyWeb", {
       environment: {
-        // Playwright configuration for Lambda
+        // Browser automation config for all frameworks (Playwright, Skyvern, Browserbase)
         PLAYWRIGHT_BROWSERS_PATH: "/tmp/playwright-browsers"
-      },
-      // Add Playwright layer for browser binaries
-      layers: [
-        "arn:aws:lambda:us-east-1:764866452798:layer:chrome-aws-lambda:31"
-      ]
+      }
     });
 
     return {
