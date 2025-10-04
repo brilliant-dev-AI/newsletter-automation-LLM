@@ -24,8 +24,8 @@ export default $config({
       },
       primaryIndex: { hashKey: "id" },
       globalIndexes: {
-        emailIdIndex: { hashKey: "emailId" },
-        categoryIndex: { hashKey: "category" },
+        emailIdIndex: { hashKey: "emailId", rangeKey: "extractedAt" },
+        categoryIndex: { hashKey: "category", rangeKey: "extractedAt" },
         urlIndex: { hashKey: "url" }
       },
     });
