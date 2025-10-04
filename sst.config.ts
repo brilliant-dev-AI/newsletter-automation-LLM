@@ -58,12 +58,19 @@ export default $config({
       server: {
         timeout: "60 seconds", // Increased from default 30s to handle complex sites
         memory: "1024 MB" // Increased memory for better performance
-      }
+      },
+      permissions: [
+        {
+          actions: ["dynamodb:*"],
+          resources: [linksTable.arn, `${linksTable.arn}/*`]
+        },
+        {
+          actions: ["s3:*"],
+          resources: [emailBucket.arn, `${emailBucket.arn}/*`]
+        }
+      ]
     });
 
-    // Grant permissions to the Nextjs app
-    linksTable.allow("read write", web);
-    emailBucket.allow("read write", web);
 
     return {
       web: web.url
