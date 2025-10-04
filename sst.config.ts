@@ -59,10 +59,23 @@ export default $config({
         timeout: "60 seconds", // Increased from default 30s to handle complex sites
         memory: "1024 MB" // Increased memory for better performance
       },
+      permissions: [
+        {
+          actions: ["dynamodb:*"],
+          resources: [
+            "arn:aws:dynamodb:*:*:table/*",
+            "arn:aws:dynamodb:*:*:table/*/*"
+          ]
+        },
+        {
+          actions: ["s3:*"],
+          resources: [
+            "arn:aws:s3:::*",
+            "arn:aws:s3:::*/*"
+          ]
+        }
+      ]
     });
-
-    // Attach resources to provide IAM permissions
-    web.attach([linksTable, emailBucket]);
 
     return {
       web: web.url
