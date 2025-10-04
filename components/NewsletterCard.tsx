@@ -13,9 +13,10 @@ interface Newsletter {
 
 interface NewsletterCardProps {
   newsletter: Newsletter;
+  onRetry?: (newsletter: Newsletter) => void;
 }
 
-export function NewsletterCard({ newsletter }: NewsletterCardProps) {
+export function NewsletterCard({ newsletter, onRetry }: NewsletterCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -96,11 +97,13 @@ export function NewsletterCard({ newsletter }: NewsletterCardProps) {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 text-center border border-blue-200/50 dark:border-blue-700/50">
-          <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-            {newsletter.linksCount}
+          <p className="text-sm font-bold text-gray-900 dark:text-white mb-1">
+            {newsletter.status === "completed" ? "✅ Success" : 
+             newsletter.status === "error" ? "❌ Failed" :
+             newsletter.status === "processing" ? "⏳ Processing" : "⏸️ Pending"}
           </p>
           <p className="text-xs text-blue-700 dark:text-blue-300 font-semibold">
-            Links Found
+            Automation Status
           </p>
         </div>
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 text-center border border-purple-200/50 dark:border-purple-700/50">
@@ -115,18 +118,18 @@ export function NewsletterCard({ newsletter }: NewsletterCardProps) {
 
       {/* Error Message */}
       {newsletter.status === "error" && newsletter.errorMessage && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-xl p-4 mb-4">
-          <div className="flex items-start space-x-3">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <div className="flex items-start space-x-2">
             <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
-                Automation Failed
+              <h4 className="text-xs font-semibold text-red-800 mb-1">
+                Error Details
               </h4>
-              <p className="text-sm text-red-700 dark:text-red-300">
+              <p className="text-xs text-red-700 leading-relaxed">
                 {newsletter.errorMessage}
               </p>
             </div>
@@ -136,13 +139,16 @@ export function NewsletterCard({ newsletter }: NewsletterCardProps) {
 
       {/* Actions */}
       <div className="flex space-x-3">
-        {newsletter.status === "completed" && newsletter.linksCount > 0 && (
+        {newsletter.status === "completed" && (
           <button className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105">
             View Links
           </button>
         )}
         {newsletter.status === "error" && (
-          <button className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105">
+          <button 
+            onClick={() => onRetry?.(newsletter)}
+            className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+          >
             Retry
           </button>
         )}

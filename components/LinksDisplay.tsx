@@ -21,7 +21,7 @@ interface LinksDisplayProps {
 
 export function LinksDisplay({ className = '' }: LinksDisplayProps) {
   const [links, setLinks] = useState<Link[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,7 +31,11 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
   const fetchLinks = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/links');
+      // Use local API in development, deployed API in production
+      const apiUrl = process.env.NODE_ENV === 'development' 
+        ? '/api/links' 
+        : 'https://d35d9snn4nkype.cloudfront.net/api/links';
+      const response = await fetch(apiUrl);
       const data = await response.json();
 
       if (data.success) {
@@ -48,7 +52,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
 
   const markAsProcessed = async (linkId: string) => {
     try {
-      const response = await fetch('/api/links', {
+      const response = await fetch('https://d35d9snn4nkype.cloudfront.net/api/links', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,17 +73,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
     }
   };
 
-  if (loading) {
-    return (
-      <div className={`p-6 bg-white rounded-lg shadow-md ${className}`}>
-        <h2 className="text-xl font-semibold mb-4">📊 Extracted Links</h2>
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
-    );
-  }
+  // Remove skeleton loading - show content immediately
 
   if (error) {
     return (
@@ -102,14 +96,26 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
   const htmlExtractedCount = links.filter(link => link.extractionMethod === 'html_parser').length;
 
   return (
-    <div className={`p-6 bg-white rounded-lg shadow-md ${className}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">📊 Extracted Links</h2>
+    <div className={className}>
+      <div className="flex justify-end mb-4">
         <button
           onClick={fetchLinks}
-          className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+          disabled={loading}
+          className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
         >
-          Refresh
+          {loading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Loading...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Refresh</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -218,9 +224,12 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
                 {!link.processed && (
                   <button
                     onClick={() => markAsProcessed(link.id)}
-                    className="ml-4 px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                    className="ml-4 flex items-center space-x-1 px-3 py-2 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   >
-                    Mark Processed
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Mark Done</span>
                   </button>
                 )}
               </div>
