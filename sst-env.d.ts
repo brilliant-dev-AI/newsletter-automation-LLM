@@ -5,6 +5,14 @@
 
 declare module "sst" {
   export interface Resource {
+    "EmailBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
+    "LinksTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
     "MyWeb": {
       "type": "sst.aws.Nextjs"
       "url": string

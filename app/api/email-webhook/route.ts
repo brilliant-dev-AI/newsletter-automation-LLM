@@ -6,7 +6,19 @@ export async function POST(request: NextRequest) {
     console.log('📬 Received email webhook request');
     
     // Parse the incoming email data
-    const emailData = await request.json();
+    const rawData = await request.json();
+    
+    // Normalize field names for different sources (Zapier vs direct calls)
+    const emailData = {
+      from: rawData.from || rawData.from_email,
+      subject: rawData.subject,
+      body: rawData.body || rawData.body_plain,
+      html: rawData.html || rawData.body_html,
+      date: rawData.date,
+      to: rawData.to || rawData.to_emails,
+      cc: rawData.cc || rawData.cc_emails,
+      messageId: rawData.message_id || rawData.messageId
+    };
     
     // Validate required fields
     if (!emailData.from || !emailData.subject) {
@@ -18,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`📧 Processing email from: ${emailData.from}`);
     console.log(`📧 Subject: ${emailData.subject}`);
+    console.log(`📧 Source: ${rawData.from_email ? 'Zapier' : 'Direct'}`);
 
     const emailService = new EmailService();
 
