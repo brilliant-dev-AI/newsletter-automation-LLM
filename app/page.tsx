@@ -4,7 +4,6 @@ import { useState } from "react";
 import { NewsletterCard } from "../components/NewsletterCard";
 import { NewsletterForm } from "../components/NewsletterForm";
 import { LinksDisplay } from "../components/LinksDisplay";
-import { EmailSetup } from "../components/EmailSetup";
 
 interface Newsletter {
   id: string;
@@ -204,10 +203,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* Email Setup */}
-          <div className="mt-16">
-            <EmailSetup className="mb-8" />
-          </div>
 
           {/* Extracted Links Dashboard */}
           <div className="mt-16">
