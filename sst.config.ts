@@ -10,6 +10,26 @@ export default $config({
     };
   },
   async run() {
+    // Email storage bucket
+    const emailBucket = new sst.aws.Bucket("EmailBucket");
+
+    // Links storage table
+    const linksTable = new sst.aws.Dynamo("LinksTable", {
+      fields: {
+        id: "string",
+        emailId: "string",
+        url: "string",
+        category: "string",
+        extractedAt: "string"
+      },
+      primaryIndex: { hashKey: "id" },
+      globalIndexes: {
+        emailIdIndex: { hashKey: "emailId" },
+        categoryIndex: { hashKey: "category" },
+        urlIndex: { hashKey: "url" }
+      },
+    });
+
     const web = new sst.aws.Nextjs("MyWeb", {
       environment: {
         // Lambda-optimized Playwright handles browser binaries automatically
@@ -30,8 +50,10 @@ export default $config({
         OPENAI_MODEL: process.env.OPENAI_MODEL || "gpt-4",
         
         // Email Configuration
-        NEWSLETTER_EMAIL: process.env.NEWSLETTER_EMAIL || "",
-        NOTIFICATION_EMAIL: process.env.NOTIFICATION_EMAIL || ""
+        NEWSLETTER_EMAIL: process.env.NEWSLETTER_EMAIL || "newsletter@divizend.com",
+        NOTIFICATION_EMAIL: process.env.NOTIFICATION_EMAIL || "admin@divizend.com",
+        EMAIL_BUCKET: emailBucket.name,
+        LINKS_TABLE: linksTable.name
       },
       server: {
         timeout: "60 seconds", // Increased from default 30s to handle complex sites
