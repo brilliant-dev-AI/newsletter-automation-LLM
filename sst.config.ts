@@ -61,9 +61,9 @@ export default $config({
       }
     });
 
-    // Link resources to provide proper IAM permissions
-    web.link(linksTable);
-    web.link(emailBucket);
+    // Grant permissions to the Nextjs app
+    linksTable.allow("read write", web);
+    emailBucket.allow("read write", web);
 
     return {
       web: web.url
