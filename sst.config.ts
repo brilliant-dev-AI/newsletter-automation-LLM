@@ -61,6 +61,8 @@ export default $config({
       },
     });
 
+    // Attach resources to provide IAM permissions
+    web.attach([linksTable, emailBucket]);
 
     return {
       web: web.url
