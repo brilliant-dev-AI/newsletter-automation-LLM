@@ -11,6 +11,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [processingLinks, setProcessingLinks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchLinks();
@@ -48,12 +49,20 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
   };
 
   const markAsProcessed = async (linkId: string) => {
+    // Add to processing set
+    setProcessingLinks(prev => new Set(prev).add(linkId));
+    
     try {
       // For mock data in development, just update locally
       if (process.env.NODE_ENV === 'development') {
         setLinks(prev => prev.map(link => 
           link.id === linkId ? { ...link, processed: true } : link
         ));
+        setProcessingLinks(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(linkId);
+          return newSet;
+        });
         return;
       }
 
@@ -66,16 +75,30 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
         body: JSON.stringify({ linkId }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         // Update the link in the local state
         setLinks(prevLinks =>
           prevLinks.map(link =>
             link.id === linkId ? { ...link, processed: true } : link
           )
         );
+        console.log('✅ Link marked as processed:', linkId);
+      } else {
+        console.error('❌ Failed to mark link as processed:', data.error || 'Unknown error');
+        setError(data.error || 'Failed to mark link as processed');
       }
     } catch (err) {
-      console.error('Error marking link as processed:', err);
+      console.error('❌ Error marking link as processed:', err);
+      setError('Network error while marking link as processed');
+    } finally {
+      // Remove from processing set
+      setProcessingLinks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(linkId);
+        return newSet;
+      });
     }
   };
 
@@ -117,20 +140,14 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
         <button
           onClick={fetchLinks}
           disabled={loading}
-          className="flex items-center space-x-2 px-3 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center justify-center w-10 h-10 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Loading...</span>
-            </>
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span>Refresh</span>
-            </>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
           )}
         </button>
       </div>
@@ -225,12 +242,22 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
                 {!link.processed && (
                   <button
                     onClick={() => markAsProcessed(link.id)}
-                    className="ml-4 flex items-center space-x-1 px-3 py-2 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                    disabled={processingLinks.has(link.id)}
+                    className="ml-4 flex items-center space-x-2 px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Mark Done</span>
+                    {processingLinks.has(link.id) ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Mark Done</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>

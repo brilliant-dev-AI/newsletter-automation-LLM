@@ -90,25 +90,43 @@ export default function Home() {
   const handleSubmit = async (url: string, email: string, framework: "playwright" | "skyvern" | "browserbase") => {
     console.log("Submitting newsletter signup:", { url, email, framework });
     
-    // Add to local state immediately
-    const newNewsletter: Newsletter = {
-      id: Date.now().toString(),
-      url,
-      status: "pending",
-      email,
-      linksCount: 0,
-      lastProcessed: null,
-      framework
-    };
+    // Use functional update to ensure we have the latest state
+    setNewsletters(prev => {
+      // Check if this exact combination already exists
+      const existingNewsletter = prev.find(n => n.url === url && n.email === email);
+      
+      // Prevent duplicate submissions if already processing
+      if (existingNewsletter && existingNewsletter.status === "processing") {
+        console.log("⚠️ Newsletter already being processed, skipping duplicate submission");
+        return prev; // Return unchanged state
+      }
+      
+      if (existingNewsletter) {
+        // Update existing entry
+        console.log("🔄 Updating existing newsletter:", existingNewsletter.id);
+        return prev.map(n => 
+          n.id === existingNewsletter.id 
+            ? { ...n, status: "processing" as const, framework, errorMessage: undefined }
+            : n
+        );
+      } else {
+        // Add new entry
+        const newNewsletter: Newsletter = {
+          id: Date.now().toString(),
+          url,
+          status: "processing",
+          email,
+          linksCount: 0,
+          lastProcessed: null,
+          framework
+        };
+        console.log("➕ Adding new newsletter:", newNewsletter.id);
+        return [newNewsletter, ...prev];
+      }
+    });
     
-    setNewsletters(prev => [newNewsletter, ...prev]);
-
-    // Update status to processing
-    setNewsletters(prev => prev.map(n => 
-      n.id === newNewsletter.id 
-        ? { ...n, status: "processing" as const }
-        : n
-    ));
+    // Get the newsletter ID for the API call
+    const newsletterId = newsletters.find(n => n.url === url && n.email === email)?.id || Date.now().toString();
 
     try {
       // Call our automation API
@@ -125,7 +143,7 @@ export default function Home() {
       if (response.ok && data.success && data.result.success) {
         // Update the newsletter status to completed only if automation actually succeeded
         setNewsletters(prev => prev.map(n => 
-          n.id === newNewsletter.id 
+          n.id === newsletterId 
             ? { 
                 ...n, 
                 status: "completed" as const,
@@ -139,7 +157,7 @@ export default function Home() {
       } else {
         // Update status to error if automation failed
         setNewsletters(prev => prev.map(n => 
-          n.id === newNewsletter.id 
+          n.id === newsletterId 
             ? { 
                 ...n, 
                 status: "error" as const,
@@ -153,7 +171,7 @@ export default function Home() {
     } catch (error) {
       // Update status to error
       setNewsletters(prev => prev.map(n => 
-        n.id === newNewsletter.id 
+        n.id === newsletterId 
           ? { ...n, status: "error" as const }
           : n
       ));
@@ -207,13 +225,13 @@ export default function Home() {
             </div>
             {newsletters.length > 0 ? (
               <div className="max-h-96 overflow-y-auto space-y-3">
-                {newsletters.slice().reverse().map((newsletter) => (
+                {newsletters.map((newsletter) => (
                   <div key={newsletter.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                         newsletter.status === 'completed' ? 'bg-teal-100' :
                         newsletter.status === 'error' ? 'bg-red-100' :
-                        newsletter.status === 'processing' ? 'bg-blue-100' :
+                        newsletter.status === 'processing' ? 'bg-teal-100' :
                         'bg-gray-100'
                       }`}>
                         {newsletter.status === 'completed' ? (
@@ -225,9 +243,7 @@ export default function Home() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         ) : newsletter.status === 'processing' ? (
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
+                          <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -245,14 +261,11 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-                        newsletter.status === 'completed' ? 'bg-teal-100 text-teal-700' :
-                        newsletter.status === 'error' ? 'bg-red-100 text-red-700' :
-                        newsletter.status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {newsletter.status}
-                      </span>
+                      {newsletter.status === 'completed' && (
+                        <span className="px-2 py-1 rounded-md text-xs font-medium bg-teal-100 text-teal-700">
+                          ✓ Completed
+                        </span>
+                      )}
                       {newsletter.status === 'error' && (
                         <button 
                           onClick={() => handleRetry(newsletter)}
@@ -265,10 +278,15 @@ export default function Home() {
                         </button>
                       )}
                       {newsletter.status === 'processing' && (
-                        <div className="flex items-center space-x-1 px-2 py-1 bg-blue-600 text-white text-xs rounded-md">
+                        <div className="flex items-center space-x-1 px-2 py-1 bg-teal-600 text-white text-xs rounded-md">
                           <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           <span>Processing...</span>
                         </div>
+                      )}
+                      {newsletter.status === 'pending' && (
+                        <span className="px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                          Pending
+                        </span>
                       )}
                     </div>
                   </div>
