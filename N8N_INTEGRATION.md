@@ -69,23 +69,37 @@ The system sends each extracted link as a separate webhook payload:
 }
 ```
 
-## Setup Instructions
+## Quick Setup Guide
 
-### 1. Create n8n Workflow
-1. Sign up at [n8n.cloud](https://n8n.cloud) or deploy self-hosted
-2. Create new workflow
-3. Add Webhook Trigger node
-4. Configure webhook URL (copy this URL)
-5. Add Google Sheets node
-6. Connect nodes and configure
-
-### 2. Configure Environment
-Add to your `.env.local`:
+### 1. Configure Environment Variables
+Edit your `.env` file:
 ```bash
+# Copy the template
+cp env.example .env
+
+# Edit .env and add your n8n webhook URL
 N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/your-webhook-id
 ```
 
-### 3. Deploy
+### 2. Create n8n Workflow
+1. Sign up at [n8n.cloud](https://n8n.cloud) or deploy self-hosted
+2. Create new workflow
+3. Add **Webhook Trigger** node
+4. Configure webhook URL (copy this URL)
+5. Add **Google Sheets** node
+6. Connect nodes and configure
+
+### 3. Test the Integration
+```bash
+# Test locally
+npm run dev
+curl -X POST 'http://localhost:3000/api/test-newsletter'
+
+# Test on deployed version
+curl -X POST 'https://your-app.com/api/test-newsletter'
+```
+
+### 4. Deploy
 ```bash
 sst deploy --stage production
 ```
@@ -97,11 +111,55 @@ sst deploy --stage production
 2. Check n8n workflow execution logs
 3. Verify data appears in Google Sheets
 
-### Manual Testing:
-Use the test endpoint:
+## API Endpoints
+
+The system now includes dedicated API endpoints for n8n integration:
+
+### 1. Test Endpoint (`/api/test-newsletter`)
+**Purpose**: Test newsletter processing and n8n integration with mock data
+
+**Usage**:
 ```bash
-curl -X POST 'https://your-app.com/api/test-newsletter' \
-  -H 'Content-Type: application/json'
+# Test the integration locally
+curl -X POST 'http://localhost:3000/api/test-newsletter'
+
+# Test on deployed version
+curl -X POST 'https://your-app.com/api/test-newsletter'
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Newsletter processing and n8n integration test completed successfully",
+  "emailId": "test-email-1234567890",
+  "linksExtracted": 4,
+  "links": [...],
+  "n8nIntegration": "Enabled"
+}
+```
+
+### 2. Email Webhook (`/api/email-webhook`)
+**Purpose**: Process real newsletter emails and send to n8n
+
+**Usage**:
+```bash
+curl -X POST 'https://your-app.com/api/email-webhook' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "from": "newsletter@example.com",
+    "subject": "Weekly Newsletter",
+    "body": "Email content...",
+    "html": "<html>...</html>"
+  }'
+```
+
+### 3. Links API (`/api/links`)
+**Purpose**: Retrieve all extracted links from DynamoDB
+
+**Usage**:
+```bash
+curl 'https://your-app.com/api/links'
 ```
 
 ## Benefits
@@ -182,3 +240,4 @@ curl -X POST 'http://localhost:3000/api/test-newsletter'
 - **Lambda Calls**: Minimal cost for webhook processing
 
 This integration demonstrates the system's capability to extend beyond basic automation into comprehensive workflow orchestration, making it suitable for enterprise-level newsletter processing and data management.
+

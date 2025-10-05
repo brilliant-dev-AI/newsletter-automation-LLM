@@ -1,109 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server';
-const EmailService = require('../../../lib/email-service.js');
+import EmailService from '../../../lib/email-service.js';
 
 export async function POST(request: NextRequest) {
   try {
-    const { newsletterUrl, email } = await request.json();
-
-    if (!newsletterUrl) {
-      return NextResponse.json(
-        { error: 'Missing required field: newsletterUrl' },
-        { status: 400 }
-      );
-    }
-
-    console.log(`🧪 Testing newsletter processing for: ${newsletterUrl}`);
-
+    console.log('🧪 Testing newsletter processing and n8n integration...');
+    
+    // Create a test email service instance
     const emailService = new EmailService();
-
-    // Use a simple mock email for testing
-    const newsletterEmail = process.env.TEST_EMAIL || 'test@yourdomain.com';
-    console.log(`📧 Using mock email for testing: ${newsletterEmail}`);
-
-    // Simulate an incoming newsletter email
-    const mockNewsletterEmail = {
-      id: `test-${Date.now()}`,
-      from: 'newsletter@yourdomain.com',
-      subject: `Test Newsletter - ${newsletterUrl}`,
+    
+    // Mock newsletter email data for testing
+    const testEmailData = {
+      id: `test-email-${Date.now()}`,
+      from: 'newsletter@example.com',
+      subject: 'Weekly Tech Newsletter - Test Edition',
       date: new Date().toISOString(),
-      body: `This is a test newsletter from ${newsletterUrl}.
-
-Here are some interesting links:
-
-1. Check out this amazing tool: https://github.com/microsoft/vscode
-2. Read this article about AI: https://openai.com/blog/gpt-4
-3. Product Hunt featured app: https://www.producthunt.com/products/notion
-4. Follow us on Twitter: https://twitter.com/yourcompany
-5. Our latest blog post: https://yourdomain.com/blog/latest
-
-Thanks for subscribing!`,
+      body: `
+        Welcome to our weekly tech newsletter!
+        
+        Here are this week's top stories:
+        
+        1. New AI breakthrough: https://example.com/ai-breakthrough
+        2. Developer tools roundup: https://example.com/dev-tools
+        3. Startup funding news: https://example.com/funding-news
+        
+        Don't forget to check out our latest product: https://example.com/new-product
+        
+        Best regards,
+        The Tech Team
+        
+        Unsubscribe: https://example.com/unsubscribe
+      `,
       html: `
         <html>
           <body>
-            <h1>Test Newsletter</h1>
-            <p>This is a test newsletter from ${newsletterUrl}.</p>
+            <h1>Weekly Tech Newsletter</h1>
+            <p>Welcome to our weekly tech newsletter!</p>
             
-            <h2>Interesting Links:</h2>
+            <h2>Top Stories:</h2>
             <ul>
-              <li><a href="https://github.com/microsoft/vscode">Check out this amazing tool</a></li>
-              <li><a href="https://openai.com/blog/gpt-4">Read this article about AI</a></li>
-              <li><a href="https://www.producthunt.com/products/notion">Product Hunt featured app</a></li>
-              <li><a href="https://twitter.com/yourcompany">Follow us on Twitter</a></li>
-              <li><a href="https://yourdomain.com/blog/latest">Our latest blog post</a></li>
+              <li><a href="https://example.com/ai-breakthrough">New AI breakthrough</a></li>
+              <li><a href="https://example.com/dev-tools">Developer tools roundup</a></li>
+              <li><a href="https://example.com/funding-news">Startup funding news</a></li>
             </ul>
             
-            <p>Thanks for subscribing!</p>
+            <p>Don't forget to check out our <a href="https://example.com/new-product">latest product</a>!</p>
+            
+            <p>Best regards,<br>The Tech Team</p>
+            
+            <p><a href="https://example.com/unsubscribe">Unsubscribe</a></p>
           </body>
         </html>
       `,
-      raw: 'Mock email content'
+      raw: 'Mock email raw content',
+      headers: {},
+      attachments: []
     };
-
-    // Process the newsletter
-    const result = await emailService.processIncomingEmail(mockNewsletterEmail);
-
+    
+    console.log('📧 Processing test newsletter email...');
+    
+    // Process the test email (this will trigger n8n integration)
+    const result = await emailService.processIncomingEmail(testEmailData);
+    
     if (result.success) {
-      console.log(`✅ Test newsletter processed successfully: ${result.emailId}`);
+      console.log(`✅ Test completed successfully!`);
+      console.log(`📊 Extracted ${result.linksExtracted} links`);
+      console.log(`🔗 Email ID: ${result.emailId}`);
+      
       return NextResponse.json({
         success: true,
-        message: 'Test newsletter processed successfully',
-        newsletterEmail: newsletterEmail,
+        message: 'Newsletter processing and n8n integration test completed successfully',
         emailId: result.emailId,
         linksExtracted: result.linksExtracted,
-        links: result.links
+        links: result.links,
+        n8nIntegration: process.env.N8N_WEBHOOK_URL ? 'Enabled' : 'Disabled (no webhook URL configured)'
       });
     } else {
-      console.error(`❌ Test newsletter processing failed: ${result.error}`);
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      );
+      console.error('❌ Test failed:', result.error);
+      return NextResponse.json({
+        success: false,
+        error: result.error,
+        message: 'Newsletter processing test failed'
+      }, { status: 500 });
     }
-
+    
   } catch (error) {
-    console.error('❌ Test newsletter API error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Test newsletter processing failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    console.error('❌ Test endpoint error:', error);
+    
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      message: 'Test endpoint failed'
+    }, { status: 500 });
   }
 }
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Test Newsletter Processing API',
-    endpoints: {
-      POST: '/api/test-newsletter - Test newsletter processing with mock data'
-    },
-    usage: {
-      method: 'POST',
-      body: {
-        newsletterUrl: 'https://yourdomain.com/newsletter',
-        email: 'test@yourdomain.com'
-      }
-    }
+    message: 'Newsletter processing and n8n integration test endpoint',
+    usage: 'POST to this endpoint to test newsletter processing and n8n integration',
+    n8nStatus: process.env.N8N_WEBHOOK_URL ? 'Configured' : 'Not configured',
+    environment: process.env.NODE_ENV || 'development'
   });
 }

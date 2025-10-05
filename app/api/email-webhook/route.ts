@@ -1,94 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server';
-const EmailService = require('../../../lib/email-service.js');
+import EmailService from '../../../lib/email-service.js';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('📬 Received email webhook request');
+    console.log('📬 Received newsletter email webhook...');
     
     // Parse the incoming email data
-    const rawData = await request.json();
+    const emailData = await request.json();
     
-    // Normalize field names for different sources (Zapier vs direct calls)
-    const emailData = {
-      from: rawData.from || rawData.from_email,
-      subject: rawData.subject,
-      body: rawData.body || rawData.body_plain,
-      html: rawData.html || rawData.body_html,
-      date: rawData.date,
-      to: rawData.to || rawData.to_emails,
-      cc: rawData.cc || rawData.cc_emails,
-      messageId: rawData.message_id || rawData.messageId
-    };
-    
-    // Validate required fields
-    if (!emailData.from || !emailData.subject) {
-      return NextResponse.json(
-        { error: 'Missing required fields: from, subject' },
-        { status: 400 }
-      );
+    if (!emailData) {
+      return NextResponse.json({
+        success: false,
+        error: 'No email data provided'
+      }, { status: 400 });
     }
-
-    console.log(`📧 Processing email from: ${emailData.from}`);
-    console.log(`📧 Subject: ${emailData.subject}`);
-    console.log(`📧 Source: ${rawData.from_email ? 'Zapier' : 'Direct'}`);
-
+    
+    console.log(`📧 Processing email from: ${emailData.from || 'Unknown'}`);
+    console.log(`📧 Subject: ${emailData.subject || 'No subject'}`);
+    
+    // Create email service instance
     const emailService = new EmailService();
-
-    // Process the incoming newsletter email
+    
+    // Process the incoming email
     const result = await emailService.processIncomingEmail(emailData);
-
+    
     if (result.success) {
-      console.log(`✅ Newsletter processed successfully: ${result.emailId}`);
-      console.log(`🔗 Extracted ${result.linksExtracted} links`);
+      console.log(`✅ Email processed successfully!`);
+      console.log(`📊 Extracted ${result.linksExtracted} links`);
+      console.log(`🔗 Email ID: ${result.emailId}`);
       
       return NextResponse.json({
         success: true,
-        message: 'Newsletter processed successfully',
+        message: 'Newsletter email processed successfully',
         emailId: result.emailId,
         linksExtracted: result.linksExtracted,
-        links: result.links
+        links: result.links,
+        n8nIntegration: process.env.N8N_WEBHOOK_URL ? 'Enabled' : 'Disabled'
       });
     } else {
-      console.error(`❌ Newsletter processing failed: ${result.error}`);
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      );
+      console.error('❌ Email processing failed:', result.error);
+      
+      return NextResponse.json({
+        success: false,
+        error: result.error,
+        message: 'Email processing failed'
+      }, { status: 500 });
     }
-
+    
   } catch (error) {
     console.error('❌ Email webhook error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Email processing failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      message: 'Email webhook processing failed'
+    }, { status: 500 });
   }
 }
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Email Webhook API',
-    description: 'Receives incoming newsletter emails for processing',
+    message: 'Newsletter email processing webhook endpoint',
+    usage: 'POST email data to this endpoint for processing and n8n integration',
+    n8nStatus: process.env.N8N_WEBHOOK_URL ? 'Configured' : 'Not configured',
+    environment: process.env.NODE_ENV || 'development',
     endpoints: {
-      POST: '/api/email-webhook - Process incoming newsletter emails'
-    },
-    usage: {
-      method: 'POST',
-      body: {
-        from: 'newsletter@example.com',
-        subject: 'Weekly Newsletter',
-        body: 'Email text content',
-        html: '<html>Email HTML content</html>',
-        date: '2024-01-01T00:00:00Z'
-      }
-    },
-    webhookSetup: {
-      gmail: 'Use Gmail API to forward emails to this endpoint',
-      outlook: 'Use Outlook API to forward emails to this endpoint',
-      custom: 'Configure your email provider to POST to this endpoint'
+      test: '/api/test-newsletter',
+      webhook: '/api/email-webhook',
+      links: '/api/links'
     }
   });
 }
