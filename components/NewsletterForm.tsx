@@ -38,7 +38,7 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* URL Input */}
       <div>
-        <label htmlFor="url" className="block text-sm font-semibold text-gray-900 mb-2">
+        <label htmlFor="url" className="block text-sm font-medium text-gray-900 mb-2">
           Website URL
         </label>
         <input
@@ -47,14 +47,14 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://example.com"
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 focus:border-opacity-70 transition-colors text-gray-900 placeholder-gray-500"
+          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-0 focus:border-teal-600 transition-colors text-gray-900 placeholder-gray-500 bg-white"
           required
         />
       </div>
 
       {/* Email Input */}
       <div>
-        <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
           Email Address
         </label>
         <input
@@ -63,23 +63,23 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-0 focus:border-gray-300 focus:border-opacity-70 transition-colors text-gray-900 placeholder-gray-500"
+          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-0 focus:border-teal-600 transition-colors text-gray-900 placeholder-gray-500 bg-white"
           required
         />
       </div>
 
       {/* Framework Selection */}
       <div>
-        <label className="block text-sm font-semibold text-gray-900 mb-3">
+        <label className="block text-sm font-medium text-gray-900 mb-3">
           Automation Engine
         </label>
         <div className="grid grid-cols-3 gap-2">
           {frameworkOptions.map((option) => (
             <label
               key={option.value}
-              className={`relative flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+              className={`relative flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
                 framework === option.value
-                  ? "border-blue-500 bg-blue-50 text-blue-900"
+                  ? "border-teal-600 bg-teal-50 text-teal-900"
                   : "border-gray-300 bg-white hover:border-gray-400"
               }`}
             >
@@ -91,10 +91,10 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
                 onChange={(e) => setFramework(e.target.value as typeof framework)}
                 className="sr-only"
               />
-              <span className="text-sm font-semibold">{option.label}</span>
+              <span className="text-sm font-medium">{option.label}</span>
               {framework === option.value && (
                 <div className="absolute top-2 right-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
                 </div>
               )}
             </label>
@@ -106,7 +106,7 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
       <button
         type="submit"
         disabled={isSubmitting || !url || !email}
-        className="w-full bg-gray-800 hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+        className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
       >
         {isSubmitting ? (
           <div className="flex items-center justify-center space-x-2">

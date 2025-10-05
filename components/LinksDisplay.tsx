@@ -83,14 +83,24 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
 
   if (error) {
     return (
-      <div className={`p-6 bg-red-50 border border-red-200 rounded-lg ${className}`}>
-        <h2 className="text-xl font-semibold text-red-800 mb-2">❌ Error</h2>
-        <p className="text-red-600">{error}</p>
+      <div className={`p-8 bg-red-50 border border-red-200 rounded-2xl ${className}`}>
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-red-800">Error</h2>
+        </div>
+        <p className="text-red-600 mb-4">{error}</p>
         <button
           onClick={fetchLinks}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium"
         >
-          Retry
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>Retry</span>
         </button>
       </div>
     );
@@ -107,7 +117,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
         <button
           onClick={fetchLinks}
           disabled={loading}
-          className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center space-x-2 px-3 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
             <>
@@ -164,7 +174,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
                       </h3>
                     )}
                     {link.processed && (
-                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
+                      <span className="px-2 py-1 text-xs bg-teal-100 text-teal-800 rounded">
                         ✓ Done
                       </span>
                     )}
@@ -174,6 +184,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
                         link.category === 'tool' ? 'bg-purple-100 text-purple-800' :
                         link.category === 'news' ? 'bg-red-100 text-red-800' :
                         link.category === 'product' ? 'bg-green-100 text-green-800' :
+                        link.category === 'job' ? 'bg-orange-100 text-orange-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {link.category}
@@ -187,7 +198,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm truncate block"
+                      className="text-teal-600 hover:text-teal-800 text-sm truncate block"
                     >
                       {link.url.length > 60 ? `${link.url.substring(0, 60)}...` : link.url}
                     </a>
@@ -214,7 +225,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
                 {!link.processed && (
                   <button
                     onClick={() => markAsProcessed(link.id)}
-                    className="ml-4 flex items-center space-x-1 px-3 py-2 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="ml-4 flex items-center space-x-1 px-3 py-2 text-xs bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
