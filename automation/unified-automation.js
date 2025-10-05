@@ -68,7 +68,7 @@ class UnifiedAutomationService {
       await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Find and fill email input
+      // Enhanced email selectors for better detection
       const emailSelectors = [
         'input[type="email"]',
         'input[name*="email" i]',
@@ -82,7 +82,30 @@ class UnifiedAutomationService {
         'input[class*="mktoEmailField"]', // Mailchimp specific
         'input[name="EMAIL"]', // Smashing Magazine specific
         'input[class*="nl-box__form--email"]', // Smashing Magazine specific
-        'input[id*="mce-EMAIL"]' // Mailchimp embedded forms
+        'input[id*="mce-EMAIL"]', // Mailchimp embedded forms
+        'input[placeholder*="Enter your email" i]', // Michael Thiessen specific
+        'input[placeholder*="Subscribe" i]',
+        'input[name*="subscribe" i]',
+        'input[id*="subscribe" i]',
+        'input[class*="subscribe" i]',
+        'input[placeholder*="newsletter" i]',
+        'input[name*="newsletter" i]',
+        'input[id*="newsletter" i]',
+        'input[class*="newsletter" i]',
+        'input[placeholder*="signup" i]',
+        'input[name*="signup" i]',
+        'input[id*="signup" i]',
+        'input[class*="signup" i]',
+        'input[placeholder*="join" i]',
+        'input[name*="join" i]',
+        'input[id*="join" i]',
+        'input[class*="join" i]',
+        'input[placeholder*="get updates" i]',
+        'input[name*="updates" i]',
+        'input[id*="updates" i]',
+        'input[class*="updates" i]',
+        'input[aria-label*="email" i]',
+        'input[aria-label*="Email" i]'
       ];
 
       let emailInput = null;
@@ -993,7 +1016,8 @@ async function runAutomation(url, email, framework) {
               // Wait with random delay to mimic human reading
               await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
               
-              const emailField = await page.$('input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i]');
+              // Enhanced email field detection with more patterns
+              const emailField = await page.$('input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i], input[placeholder*="Enter your email" i], input[placeholder*="Subscribe" i], input[name*="subscribe" i], input[id*="subscribe" i], input[class*="subscribe" i], input[placeholder*="newsletter" i], input[name*="newsletter" i], input[id*="newsletter" i], input[class*="newsletter" i], input[placeholder*="signup" i], input[name*="signup" i], input[id*="signup" i], input[class*="signup" i], input[placeholder*="join" i], input[name*="join" i], input[id*="join" i], input[class*="join" i], input[placeholder*="get updates" i], input[name*="updates" i], input[id*="updates" i], input[class*="updates" i], input[name="email_address"], input[name="EMAIL"], input[name="emailAddress"], input[name="user_email"], input[name="userEmail"], input[name="subscriber_email"], input[name="subscriberEmail"], input[name="newsletter_email"], input[name="newsletterEmail"]');
               
               if (emailField) {
                 console.log(`✅ Found newsletter signup on given URL: ${url}`);
@@ -1026,7 +1050,7 @@ async function runAutomation(url, email, framework) {
                   // Check for "Subscribe" text link (Product Hunt specific)
                   const subscribeTextLink = Array.from(document.querySelectorAll('a')).find(link => 
                     link.textContent.trim() === 'Subscribe' && 
-                    (link.href.includes('newsletters') || link.href.includes('campaign=weekly_newsletter'))
+                    (link.href.includes('newsletters') || link.href.includes('campaign=weekly_newsletter') || link.href.includes('ref=header_nav'))
                   );
                   
                   // Return the first valid newsletter link found
@@ -1081,13 +1105,26 @@ async function runAutomation(url, email, framework) {
                 // Debug: Log all links found on the page
                 const allLinks = await page.evaluate(() => {
                   const links = Array.from(document.querySelectorAll('a'));
-                  return links.slice(0, 10).map(link => ({
+                  return links.slice(0, 20).map(link => ({
                     text: link.textContent.trim(),
                     href: link.href,
                     visible: link.offsetParent !== null
                   }));
                 });
                 console.log(`🔗 Found ${allLinks.length} sample links on page:`, allLinks);
+                
+                // Debug: Log all buttons found on the page
+                const allButtons = await page.evaluate(() => {
+                  const buttons = Array.from(document.querySelectorAll('button'));
+                  return buttons.slice(0, 10).map(button => ({
+                    text: button.textContent.trim(),
+                    classes: button.className,
+                    visible: button.offsetParent !== null
+                  }));
+                });
+                console.log(`🔘 Found ${allButtons.length} sample buttons on page:`, allButtons);
+                
+                console.log(`🔍 Newsletter link detection result:`, newsletterLink);
                 
                 if (newsletterLink && newsletterLink.visible) {
                   console.log(`🔗 Found newsletter link: "${newsletterLink.text}" -> ${newsletterLink.href}`);
@@ -1113,7 +1150,8 @@ async function runAutomation(url, email, framework) {
                     // Wait with random delay to mimic human reading
                     await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 1000));
                     
-                    const emailField = await page.$('input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i]');
+                    // Enhanced email field detection with more patterns
+                    const emailField = await page.$('input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i], input[placeholder*="Enter your email" i], input[placeholder*="Subscribe" i], input[name*="subscribe" i], input[id*="subscribe" i], input[class*="subscribe" i], input[placeholder*="newsletter" i], input[name*="newsletter" i], input[id*="newsletter" i], input[class*="newsletter" i], input[placeholder*="signup" i], input[name*="signup" i], input[id*="signup" i], input[class*="signup" i], input[placeholder*="join" i], input[name*="join" i], input[id*="join" i], input[class*="join" i], input[placeholder*="get updates" i], input[name*="updates" i], input[id*="updates" i], input[class*="updates" i], input[name="email_address"], input[name="EMAIL"], input[name="emailAddress"], input[name="user_email"], input[name="userEmail"], input[name="subscriber_email"], input[name="subscriberEmail"], input[name="newsletter_email"], input[name="newsletterEmail"]');
                     if (emailField) {
                       console.log(`✅ Found newsletter signup at header/footer link: ${href}`);
                       newsletterFound = true;
