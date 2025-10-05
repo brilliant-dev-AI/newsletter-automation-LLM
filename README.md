@@ -10,12 +10,12 @@ A production-ready newsletter automation platform that automatically signs up fo
 
 ### 1. Architecture and Design Choices
 
-We built this system using modern serverless technologies for scalability and cost-effectiveness.
+I built this system using modern serverless technologies for scalability and cost-effectiveness.
 
 **Technology Stack**
 
 **Frontend: Next.js with TypeScript**
-- Gives us both frontend and backend in one framework
+- Gives me both frontend and backend in one framework
 - Built-in API routes eliminate need for separate backend server
 - TypeScript catches errors before production
 - Automatic code splitting keeps the app fast
@@ -23,7 +23,7 @@ We built this system using modern serverless technologies for scalability and co
 **Backend: AWS Lambda Functions**
 - Each API endpoint runs as separate Lambda function
 - Automatic scaling handles traffic spikes
-- Minimal cold starts for our use case
+- Minimal cold starts for my use case
 - Perfect for webhook calls from email services
 
 **Database: DynamoDB**
@@ -36,7 +36,7 @@ We built this system using modern serverless technologies for scalability and co
 - Stores email content and attachments
 - 99.999999999% durability
 - Integrates seamlessly with AWS services
-- Very cost-effective for our needs
+- Very cost-effective for my needs
 
 **CDN: CloudFront**
 - Global content delivery network
@@ -52,13 +52,13 @@ We built this system using modern serverless technologies for scalability and co
 
 **Security:** All API keys stored in environment variables, never in code. All communication uses HTTPS. AWS IAM roles ensure each service only has access to what it needs.
 
-### 2. How We Compared Automation Frameworks
+### 2. How I Compared Automation Frameworks
 
-We tested three different approaches to newsletter automation:
+I tested three different approaches to newsletter automation:
 
-**Our Testing Methodology**
+**My Testing Methodology**
 
-For each framework, we measured:
+For each framework, I measured:
 - **Success rate:** How often it successfully found and filled newsletter forms
 - **Speed:** How long it took to complete automation
 - **Reliability:** Consistency across different website layouts
@@ -67,7 +67,7 @@ For each framework, we measured:
 
 **Framework 1: Playwright (Traditional Browser Automation)**
 
-**How it works:** Direct browser control using code. We write CSS selectors to find email fields and submit buttons, then programmatically fill them out.
+**How it works:** Direct browser control using code. I write CSS selectors to find email fields and submit buttons, then programmatically fill them out.
 
 **Results:**
 - **Success rate:** 95% - Very reliable on standard forms
@@ -104,19 +104,19 @@ For each framework, we measured:
 **Pros:** No local setup needed, enterprise-grade infrastructure, AI-powered detection
 **Cons:** Highest cost, slowest execution, external service dependency
 
-**Our Recommendation**
+**My Recommendation**
 
-Based on testing, we recommend **Playwright as the primary framework** because:
+Based on testing, I recommend **Playwright as the primary framework** because:
 - Highest success rate (95%)
 - Fastest execution (12 seconds)
 - Lowest cost (no external API fees)
 - Most reliable for production use
 
-We keep Skyvern as backup for complex sites, and Browserbase for enterprise customers who need cloud-based solutions.
+I keep Skyvern as backup for complex sites, and Browserbase for enterprise customers who need cloud-based solutions.
 
 ### 3. Results from Testing on Newsletter Sites
 
-We deployed our system to production and tested it thoroughly:
+I deployed my system to production and tested it thoroughly:
 
 **Production System Testing**
 
@@ -175,17 +175,17 @@ We deployed our system to production and tested it thoroughly:
 - **n8n integration:** ~1 second Google Sheets export
 - **System uptime:** 99.9%+ with AWS infrastructure
 
-**What We Learned**
+**What I Learned**
 
-Testing revealed that our automation frameworks work well, but newsletter sites change frequently. This is a common challenge in web automation. Our system handles these changes gracefully by detecting when sites change structure, providing clear error messages, falling back to alternative approaches, and maintaining system stability.
+Testing revealed that my automation frameworks work well, but newsletter sites change frequently. This is a common challenge in web automation. My system handles these changes gracefully by detecting when sites change structure, providing clear error messages, falling back to alternative approaches, and maintaining system stability.
 
-### 4. What We'd Improve with More Time
+### 4. What I'd Improve with More Time
 
-If we had more time to develop this system, here's what we'd focus on:
+If I had more time to develop this system, here's what I'd focus on:
 
 **Better Newsletter Site Coverage**
 
-**Current limitation:** We've only tested on a few newsletter sites
+**Current limitation:** I've only tested on a few newsletter sites
 **Improvement:** Test on 20+ additional newsletter sites including TechCrunch, Wired, Fast Company, industry-specific newsletters, and international newsletters in different languages.
 
 **Implementation:** Create site-specific optimization strategies and build automated regression testing to catch when sites change.
@@ -227,19 +227,19 @@ If we had more time to develop this system, here's what we'd focus on:
 
 **What This Means**
 
-These improvements would transform our system from a good automation tool into a comprehensive newsletter intelligence platform. The modular architecture we built makes these improvements possible without rebuilding everything.
+These improvements would transform my system from a good automation tool into a comprehensive newsletter intelligence platform. The modular architecture I built makes these improvements possible without rebuilding everything.
 
 ---
 
 ## Conclusion
 
-This newsletter automation system successfully demonstrates how modern serverless architecture can solve real-world automation challenges. We built a production-ready system that automatically processes newsletters and extracts valuable links using AI.
+This newsletter automation system successfully demonstrates how modern serverless architecture can solve real-world automation challenges. I built a production-ready system that automatically processes newsletters and extracts valuable links using AI.
 
-Our three-framework comparison provided valuable insights for choosing the right automation approach. Playwright emerged as the most reliable and cost-effective solution, while Skyvern and Browserbase offer specialized capabilities for different use cases.
+My three-framework comparison provided valuable insights for choosing the right automation approach. Playwright emerged as the most reliable and cost-effective solution, while Skyvern and Browserbase offer specialized capabilities for different use cases.
 
-The production testing revealed robust performance across all core functionalities. While newsletter sites change frequently (a common challenge in web automation), our system handles these changes gracefully and maintains stability.
+The production testing revealed robust performance across all core functionalities. While newsletter sites change frequently (a common challenge in web automation), my system handles these changes gracefully and maintains stability.
 
-The system is ready for production use and serves as a solid foundation for future enhancements. The modular architecture allows us to add new features incrementally while maintaining the reliability and performance we've achieved.
+The system is ready for production use and serves as a solid foundation for future enhancements. The modular architecture allows me to add new features incrementally while maintaining the reliability and performance I've achieved.
 
 **Live System:** https://d1jjgd52ppf516.cloudfront.net  
 **GitHub Repository:** Complete source code and documentation available
