@@ -49,6 +49,9 @@ export default $config({
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
         OPENAI_MODEL: process.env.OPENAI_MODEL || "gpt-4",
         
+        // n8n Integration (bonus feature - Google Sheets export)
+        N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || "",
+        
         // Email Configuration (not used - we use Zapier for email forwarding)
         EMAIL_BUCKET: emailBucket.name,
         LINKS_TABLE: linksTable.name
