@@ -1,19 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-interface Link {
-  id: string;
-  emailId: string;
-  url: string;
-  text: string;
-  context: string;
-  category: string;
-  relevance: number;
-  extractionMethod: string;
-  extractedAt: string;
-  processed: boolean;
-}
+import { MOCK_LINKS, type Link } from '../lib/mock-data';
 
 interface LinksDisplayProps {
   className?: string;
@@ -31,6 +19,17 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
   const fetchLinks = async () => {
     try {
       setLoading(true);
+      
+      // Use mock data for local development
+      if (process.env.NODE_ENV === 'development') {
+        setTimeout(() => {
+          setLinks(MOCK_LINKS);
+          setLoading(false);
+        }, 1000); // Simulate loading delay
+        return;
+      }
+
+      // Production: fetch real data
       const response = await fetch('/api/links');
       const data = await response.json();
 
@@ -42,12 +41,23 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
     } catch (err) {
       setError('Network error while fetching links');
     } finally {
-      setLoading(false);
+      if (process.env.NODE_ENV !== 'development') {
+        setLoading(false);
+      }
     }
   };
 
   const markAsProcessed = async (linkId: string) => {
     try {
+      // For mock data in development, just update locally
+      if (process.env.NODE_ENV === 'development') {
+        setLinks(prev => prev.map(link => 
+          link.id === linkId ? { ...link, processed: true } : link
+        ));
+        return;
+      }
+
+      // Production: make API call
       const response = await fetch('/api/links', {
         method: 'POST',
         headers: {
@@ -115,28 +125,11 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
         </button>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
-        <div className="text-center p-3 bg-blue-50 rounded">
-          <div className="text-xl font-bold text-blue-600">{links.length}</div>
-          <div className="text-xs text-blue-800">Total Links</div>
-        </div>
-        <div className="text-center p-3 bg-green-50 rounded">
-          <div className="text-xl font-bold text-green-600">{processedCount}</div>
-          <div className="text-xs text-green-800">Processed</div>
-        </div>
-        <div className="text-center p-3 bg-orange-50 rounded">
-          <div className="text-xl font-bold text-orange-600">{unprocessedCount}</div>
-          <div className="text-xs text-orange-800">Unprocessed</div>
-        </div>
-        <div className="text-center p-3 bg-purple-50 rounded">
-          <div className="text-xl font-bold text-purple-600">{llmExtractedCount}</div>
-          <div className="text-xs text-purple-800">LLM Extracted</div>
-        </div>
-        <div className="text-center p-3 bg-gray-50 rounded">
-          <div className="text-xl font-bold text-gray-600">{htmlExtractedCount}</div>
-          <div className="text-xs text-gray-800">HTML Parsed</div>
-        </div>
+      {/* Summary Stats - Simplified */}
+      <div className="flex items-center gap-4 mb-6 text-sm text-gray-600">
+        <span>{links.length} links found</span>
+        {processedCount > 0 && <span>{processedCount} processed</span>}
+        {llmExtractedCount > 0 && <span>{llmExtractedCount} AI extracted</span>}
       </div>
 
       {/* Links List */}
@@ -159,21 +152,23 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 font-medium truncate"
-                    >
-                      {link.url}
-                    </a>
+                  {/* Clean title or text instead of URL */}
+                  <div className="flex items-center gap-2 mb-2">
+                    {link.text ? (
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {link.text}
+                      </h3>
+                    ) : (
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {link.url.replace(/^https?:\/\//, '').split('/')[0]}
+                      </h3>
+                    )}
                     {link.processed && (
                       <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                        ✓ Processed
+                        ✓ Done
                       </span>
                     )}
-                    {link.category && (
+                    {link.category && link.category !== 'other' && (
                       <span className={`px-2 py-1 text-xs rounded ${
                         link.category === 'article' ? 'bg-blue-100 text-blue-800' :
                         link.category === 'tool' ? 'bg-purple-100 text-purple-800' :
@@ -184,34 +179,33 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
                         {link.category}
                       </span>
                     )}
-                    {link.extractionMethod === 'llm' && (
-                      <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded">
-                        🤖 LLM
-                      </span>
-                    )}
                   </div>
                   
-                  {link.text && (
-                    <p className="text-sm text-gray-600 mb-1">{link.text}</p>
-                  )}
+                  {/* Clean URL (clickable, truncated) */}
+                  <div className="mb-2">
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm truncate block"
+                    >
+                      {link.url.length > 60 ? `${link.url.substring(0, 60)}...` : link.url}
+                    </a>
+                  </div>
                   
-                  {link.context && (
-                    <p className="text-xs text-gray-500 italic">
-                      Context: {link.context}
+                  {/* Context if meaningful */}
+                  {link.context && link.context.length > 10 && (
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                      {link.context}
                     </p>
                   )}
                   
-                  <div className="flex items-center gap-2 mt-2">
-                    <p className="text-xs text-gray-400">
-                      Extracted: {new Date(link.extractedAt).toLocaleString()}
-                    </p>
-                    {link.relevance && (
-                      <span className={`px-2 py-1 text-xs rounded ${
-                        link.relevance >= 8 ? 'bg-green-100 text-green-800' :
-                        link.relevance >= 6 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        Relevance: {link.relevance}/10
+                  {/* Clean metadata */}
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span>{new Date(link.extractedAt).toLocaleDateString()}</span>
+                    {link.extractionMethod === 'llm' && (
+                      <span className="px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                        AI
                       </span>
                     )}
                   </div>
