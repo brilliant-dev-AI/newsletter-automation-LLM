@@ -31,11 +31,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
   const fetchLinks = async () => {
     try {
       setLoading(true);
-      // Use local API in development, deployed API in production
-      const apiUrl = process.env.NODE_ENV === 'development' 
-        ? '/api/links' 
-        : 'https://d35d9snn4nkype.cloudfront.net/api/links';
-      const response = await fetch(apiUrl);
+      const response = await fetch('/api/links');
       const data = await response.json();
 
       if (data.success) {
@@ -52,7 +48,7 @@ export function LinksDisplay({ className = '' }: LinksDisplayProps) {
 
   const markAsProcessed = async (linkId: string) => {
     try {
-      const response = await fetch('https://d35d9snn4nkype.cloudfront.net/api/links', {
+      const response = await fetch('/api/links', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

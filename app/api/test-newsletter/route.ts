@@ -17,13 +17,13 @@ export async function POST(request: NextRequest) {
     const emailService = new EmailService();
 
     // Use a simple mock email for testing
-    const newsletterEmail = 'example@gmail.com';
+    const newsletterEmail = process.env.TEST_EMAIL || 'test@yourdomain.com';
     console.log(`📧 Using mock email for testing: ${newsletterEmail}`);
 
     // Simulate an incoming newsletter email
     const mockNewsletterEmail = {
       id: `test-${Date.now()}`,
-      from: 'newsletter@example.com',
+      from: 'newsletter@yourdomain.com',
       subject: `Test Newsletter - ${newsletterUrl}`,
       date: new Date().toISOString(),
       body: `This is a test newsletter from ${newsletterUrl}.
@@ -33,8 +33,8 @@ Here are some interesting links:
 1. Check out this amazing tool: https://github.com/microsoft/vscode
 2. Read this article about AI: https://openai.com/blog/gpt-4
 3. Product Hunt featured app: https://www.producthunt.com/products/notion
-4. Follow us on Twitter: https://twitter.com/example
-5. Our latest blog post: https://example.com/blog/latest
+4. Follow us on Twitter: https://twitter.com/yourcompany
+5. Our latest blog post: https://yourdomain.com/blog/latest
 
 Thanks for subscribing!`,
       html: `
@@ -48,8 +48,8 @@ Thanks for subscribing!`,
               <li><a href="https://github.com/microsoft/vscode">Check out this amazing tool</a></li>
               <li><a href="https://openai.com/blog/gpt-4">Read this article about AI</a></li>
               <li><a href="https://www.producthunt.com/products/notion">Product Hunt featured app</a></li>
-              <li><a href="https://twitter.com/example">Follow us on Twitter</a></li>
-              <li><a href="https://example.com/blog/latest">Our latest blog post</a></li>
+              <li><a href="https://twitter.com/yourcompany">Follow us on Twitter</a></li>
+              <li><a href="https://yourdomain.com/blog/latest">Our latest blog post</a></li>
             </ul>
             
             <p>Thanks for subscribing!</p>
@@ -101,8 +101,8 @@ export async function GET() {
     usage: {
       method: 'POST',
       body: {
-        newsletterUrl: 'https://example.com/newsletter',
-        email: 'test@example.com'
+        newsletterUrl: 'https://yourdomain.com/newsletter',
+        email: 'test@yourdomain.com'
       }
     }
   });

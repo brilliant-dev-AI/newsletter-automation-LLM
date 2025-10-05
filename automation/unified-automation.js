@@ -1176,7 +1176,7 @@ if (require.main === module) {
       await service.init();
       
       // Test all three frameworks on the same site
-      const testUrl = 'https://www.producthunt.com/newsletter';
+      const testUrl = process.env.TEST_URL || 'https://www.producthunt.com/newsletter';
       const testEmail = 'test@example.com';
       
       console.log('\n🧪 Testing all frameworks on Product Hunt...\n');

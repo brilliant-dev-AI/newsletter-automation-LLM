@@ -33,10 +33,7 @@ export default function Home() {
 
     try {
       // Call our automation API
-      const apiUrl = process.env.NODE_ENV === 'development' 
-        ? '/api/automate' 
-        : 'https://d35d9snn4nkype.cloudfront.net/api/automate';
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/api/automate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,10 +112,7 @@ export default function Home() {
 
     try {
       // Call our automation API
-      const apiUrl = process.env.NODE_ENV === 'development' 
-        ? '/api/automate' 
-        : 'https://d35d9snn4nkype.cloudfront.net/api/automate';
-      const response = await fetch(apiUrl, {
+      const response = await fetch('/api/automate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
