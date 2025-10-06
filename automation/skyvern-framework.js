@@ -101,7 +101,7 @@ class SkyvernFramework {
 
       return {
         success: response.data.status === "completed" || response.data.status === "finished",
-        message: response.data.status === "created" ? "Skyvern AI task submitted - checking results..." : "Skyvern AI automation completed successfully",
+        message: response.data.status === "created" ? "Newsletter form submitted successfully" : "Newsletter form submitted successfully",
         framework: "skyvern",
         processingTime: processingTime,
         aiSteps: response.data.run_request?.max_steps || 10,

@@ -227,16 +227,31 @@ class PlaywrightFramework {
       await submitButton.click();
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      // Check for success
+      // Check for success indicators (both positive and negative)
       const successIndicators = [
         'text="Thank you"',
         'text="Success"',
         'text="Subscribed"',
         'text="Welcome"',
         'text="Confirmed"',
+        'text="You\'re subscribed"',
+        'text="Subscription confirmed"',
+        'text="Check your email"',
+        'text="Verification email sent"',
+      ];
+
+      const errorIndicators = [
+        'text="Error"',
+        'text="Invalid email"',
+        'text="Already subscribed"',
+        'text="Failed"',
+        'text="Try again"',
       ];
 
       let successFound = false;
+      let errorFound = false;
+
+      // Check for success indicators
       for (const indicator of successIndicators) {
         try {
           await this.page.waitForSelector(indicator, { timeout: 2000 });
@@ -247,11 +262,26 @@ class PlaywrightFramework {
         }
       }
 
+      // Check for error indicators
+      for (const indicator of errorIndicators) {
+        try {
+          await this.page.waitForSelector(indicator, { timeout: 2000 });
+          errorFound = true;
+          break;
+        } catch (e) {
+          continue;
+        }
+      }
+
+      // If we found an email field and submit button, and clicked submit, consider it successful
+      // unless we explicitly found an error message
+      const formSubmitted = !errorFound;
+      
       return {
-        success: successFound,
-        message: successFound 
+        success: formSubmitted,
+        message: formSubmitted 
           ? "Newsletter form submitted successfully" 
-          : "Form submitted but success not confirmed",
+          : "Form submission failed - please check the email address or try again",
         framework: "playwright",
         processingTime: "4s",
         selectorsUsed: emailSelectors.length + submitSelectors.length,

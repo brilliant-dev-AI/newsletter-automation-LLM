@@ -74,7 +74,7 @@ export default function Home() {
                   ...n,
                   status: "error" as const,
                   errorMessage:
-                    data.result?.error || data.error || "Automation failed",
+                    data.result?.message || data.result?.error || data.error || "Automation failed",
                 }
               : n,
           ),
@@ -158,7 +158,7 @@ export default function Home() {
               ? {
                   ...n,
                   status: "error" as const,
-                  errorMessage: data.result?.error || data.error || "Automation failed",
+                  errorMessage: data.result?.message || data.result?.error || data.error || "Automation failed",
                   processingTime: data.result?.processingTime || "Unknown",
                 }
               : n,
@@ -307,6 +307,11 @@ export default function Home() {
                         </p>
                         {newsletter.status === "error" && newsletter.errorMessage && (
                           <p className="text-xs text-red-600 mt-1 truncate">
+                            {newsletter.errorMessage}
+                          </p>
+                        )}
+                        {newsletter.status === "completed" && newsletter.errorMessage && (
+                          <p className="text-xs text-green-600 mt-1 truncate">
                             {newsletter.errorMessage}
                           </p>
                         )}

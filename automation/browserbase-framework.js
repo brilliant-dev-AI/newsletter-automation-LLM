@@ -132,7 +132,7 @@ class BrowserbaseFramework {
 
       return {
         success: true,
-        message: "Browserbase cloud automation completed successfully",
+        message: "Newsletter form submitted successfully",
         framework: "browserbase",
         processingTime: processingTime,
         cloudInstances: 1,
