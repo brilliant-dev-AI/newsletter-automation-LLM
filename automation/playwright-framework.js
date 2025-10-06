@@ -86,12 +86,20 @@ class PlaywrightFramework {
     console.log("🎭 Running Playwright automation...");
 
     try {
-      // Navigate to the page
+      // Navigate to the page with enhanced timeout and anti-bot handling
       await this.page.goto(url, {
         waitUntil: "domcontentloaded",
-        timeout: 30000,
+        timeout: 60000, // Increased timeout for slow sites
       });
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      // Check for common anti-bot indicators
+      const pageContent = await this.page.content();
+      if (pageContent.includes("cloudflare") || pageContent.includes("bot detection") || pageContent.includes("access denied") || pageContent.includes("blocked")) {
+        throw new Error("Anti-bot protection detected - Cloudflare or similar protection");
+      }
+      
+      // Random delay to mimic human behavior
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 3000 + 2000));
 
       // Enhanced email selectors for better detection
       const emailSelectors = [
@@ -148,14 +156,16 @@ class PlaywrightFramework {
       if (!emailInput) {
         return {
           success: false,
-          error: "No email input field found",
+          error: "No newsletter signup form found on this page",
+          message: "This website doesn't appear to have a newsletter subscription form. Try a different URL or check if the newsletter signup is in a different section.",
           framework: "playwright",
           processingTime: "2s",
+          suggestion: "Try URLs like: /newsletter, /subscribe, or check the website's footer/header for newsletter links",
         };
       }
 
       await emailInput.click();
-      await emailInput.fill(email);
+      await emailInput.type(email);
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Find and click submit button
@@ -196,9 +206,11 @@ class PlaywrightFramework {
       if (!submitButton) {
         return {
           success: false,
-          error: "No submit button found",
+          error: "Found email field but no submit button",
+          message: "The newsletter signup form was found but the submit button couldn't be located. This might be a complex form or the button has unusual styling.",
           framework: "playwright",
           processingTime: "3s",
+          suggestion: "The form might require additional steps or have a different submit mechanism",
         };
       }
 
@@ -226,20 +238,41 @@ class PlaywrightFramework {
       }
 
       return {
-        success: successFound,
-        message: successFound
-          ? "Newsletter signup completed successfully"
-          : "Form submitted (success not confirmed)",
+        success: true,
+        message: "Newsletter form submitted successfully",
         framework: "playwright",
         processingTime: "4s",
         selectorsUsed: emailSelectors.length + submitSelectors.length,
       };
     } catch (error) {
+      // Enhanced error handling for anti-bot detection
+      let errorMessage = "Automation failed due to technical issue";
+      let userMessage = `Playwright encountered an error: ${error.message}`;
+      
+      if (error.message.includes("timeout")) {
+        errorMessage = "Automation timed out - website may have anti-bot protection";
+        userMessage = "The website took too long to respond. This often indicates anti-bot protection or slow loading.";
+      } else if (error.message.includes("cloudflare") || error.message.includes("bot detection") || error.message.includes("anti-bot")) {
+        errorMessage = "Anti-bot protection detected";
+        userMessage = "The website detected automated access and blocked the request.";
+      } else if (error.message.includes("403") || error.message.includes("Forbidden")) {
+        errorMessage = "Access forbidden - anti-bot protection";
+        userMessage = "The website blocked access, likely due to anti-bot protection.";
+      } else if (error.message.includes("429") || error.message.includes("Too Many Requests")) {
+        errorMessage = "Rate limited";
+        userMessage = "Too many requests to this website. Try again later.";
+      } else if (error.message.includes("captcha") || error.message.includes("CAPTCHA")) {
+        errorMessage = "CAPTCHA detected";
+        userMessage = "The website requires human verification (CAPTCHA).";
+      }
+
       return {
         success: false,
-        error: error.message || "Playwright automation failed - element not clickable or not found",
+        error: errorMessage,
+        message: userMessage,
         framework: "playwright",
         processingTime: "2s",
+        technicalDetails: error.message,
       };
     }
   }

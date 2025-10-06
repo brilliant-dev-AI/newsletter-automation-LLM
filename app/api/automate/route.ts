@@ -41,14 +41,14 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    // Run the automation with timeout
-    const automationPromise = frameworkInstance.runAutomation(url, email);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Automation timeout after 55 seconds")),
-        55000,
-      ),
-    );
+            // Run the automation with timeout
+            const automationPromise = frameworkInstance.runAutomation(url, email);
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Automation timeout after 90 seconds - website may have anti-bot protection")),
+                90000,
+              ),
+            );
 
     const result = await Promise.race([automationPromise, timeoutPromise]);
 
@@ -61,19 +61,31 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("❌ Automation API error:", error);
 
-    // Handle specific errors
-    let errorMessage = "Automation failed";
-    if (error instanceof Error) {
-      if (error.message.includes("Browser not available on Lambda")) {
-        errorMessage =
-          "Browser not available on AWS Lambda. This is a deployment configuration issue.";
-      } else if (error.message.includes("timeout")) {
-        errorMessage =
-          "Automation timed out. The website may be slow or unresponsive.";
-      } else {
-        errorMessage = error.message;
-      }
-    }
+            // Handle specific errors
+            let errorMessage = "Automation failed";
+            if (error instanceof Error) {
+              if (error.message.includes("Browser not available on Lambda")) {
+                errorMessage =
+                  "Browser not available on AWS Lambda. This is a deployment configuration issue.";
+              } else if (error.message.includes("timeout")) {
+                errorMessage =
+                  "Automation timed out. The website may be slow, unresponsive, or have anti-bot protection.";
+              } else if (error.message.includes("anti-bot") || error.message.includes("bot detection") || error.message.includes("cloudflare")) {
+                errorMessage =
+                  "Anti-bot protection detected. The website blocked the automation attempt.";
+              } else if (error.message.includes("403") || error.message.includes("Forbidden")) {
+                errorMessage =
+                  "Access forbidden. The website may have anti-bot protection or rate limiting.";
+              } else if (error.message.includes("429") || error.message.includes("Too Many Requests")) {
+                errorMessage =
+                  "Rate limited. Too many requests to this website.";
+              } else if (error.message.includes("captcha") || error.message.includes("CAPTCHA")) {
+                errorMessage =
+                  "CAPTCHA detected. The website requires human verification.";
+              } else {
+                errorMessage = error.message;
+              }
+            }
 
     return NextResponse.json(
       {

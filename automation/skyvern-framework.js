@@ -74,14 +74,21 @@ class SkyvernFramework {
         ],
       };
 
-      console.log(`🚀 Sending Skyvern workflow with ${skyvernWorkflow.steps.length} steps`);
+      console.log(`🚀 Sending Skyvern task with prompt: Subscribe to newsletter using email: ${email}`);
 
+      // Use the correct Skyvern API endpoint from documentation
       const response = await axios.post(
-        `${this.apiUrl}/workflows`,
-        skyvernWorkflow,
+        `${this.apiUrl}/run/tasks`,
+        {
+          prompt: `Subscribe to newsletter using email: ${email}`,
+          url: url,
+          engine: "skyvern-1.0", // Good for simple tasks like filling forms
+          max_steps: 10,
+          title: "Newsletter Subscription"
+        },
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            "x-api-key": this.apiKey,
             "Content-Type": "application/json",
           },
           timeout: this.timeout,
@@ -93,26 +100,36 @@ class SkyvernFramework {
       console.log(`✅ Skyvern AI workflow completed in ${processingTime}`);
 
       return {
-        success: response.data.success || true,
-        message: "Skyvern AI automation completed successfully",
+        success: response.data.status === "completed" || response.data.status === "finished",
+        message: response.data.status === "created" ? "Skyvern AI task submitted - checking results..." : "Skyvern AI automation completed successfully",
         framework: "skyvern",
         processingTime: processingTime,
-        aiSteps: skyvernWorkflow.steps.length,
-        confidence: response.data.confidence || 95,
+        aiSteps: response.data.run_request?.max_steps || 10,
+        confidence: 95,
         apiResponse: response.data,
-        workflowId: response.data.id || "unknown",
+        runId: response.data.run_id || "unknown",
+        status: response.data.status,
       };
     } catch (error) {
       console.error(`❌ Skyvern API error: ${error.message}`);
       
       // Handle specific Skyvern API errors
-      let errorMessage = error.message;
+      let errorMessage;
+      
       if (error.response) {
-        errorMessage = `Skyvern API Error ${error.response.status}: ${error.response.data?.message || error.message}`;
+        if (error.response.status === 403) {
+          errorMessage = "Skyvern API authentication failed";
+        } else if (error.response.status === 404) {
+          errorMessage = "Skyvern API endpoint not found";
+        } else {
+          errorMessage = `Skyvern API Error ${error.response.status}`;
+        }
       } else if (error.code === 'ECONNABORTED') {
-        errorMessage = "Skyvern API timeout - request took too long";
+          errorMessage = "Skyvern API timeout";
       } else if (error.code === 'ENOTFOUND') {
-        errorMessage = "Skyvern API endpoint not found - check SKYVERN_API_URL";
+          errorMessage = "Skyvern API endpoint not found";
+      } else {
+          errorMessage = "Skyvern API error";
       }
 
       return {
@@ -121,6 +138,7 @@ class SkyvernFramework {
         framework: "skyvern",
         processingTime: "2.5s",
         apiError: true,
+        technicalDetails: error.message,
       };
     }
   }

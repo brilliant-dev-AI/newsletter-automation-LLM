@@ -48,7 +48,7 @@ class BrowserbaseFramework {
         },
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            "X-BB-API-Key": this.apiKey,
             "Content-Type": "application/json",
           },
         },
@@ -64,7 +64,7 @@ class BrowserbaseFramework {
         { url: url },
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            "X-BB-API-Key": this.apiKey,
             "Content-Type": "application/json",
           },
         },
@@ -84,7 +84,7 @@ class BrowserbaseFramework {
         },
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            "X-BB-API-Key": this.apiKey,
             "Content-Type": "application/json",
           },
         },
@@ -104,7 +104,7 @@ class BrowserbaseFramework {
         },
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            "X-BB-API-Key": this.apiKey,
             "Content-Type": "application/json",
           },
         },
@@ -121,7 +121,7 @@ class BrowserbaseFramework {
         `${this.apiUrl}/sessions/${sessionId}`,
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            "X-BB-API-Key": this.apiKey,
           },
         },
       );
@@ -151,7 +151,7 @@ class BrowserbaseFramework {
             `${this.apiUrl}/sessions/${sessionId}`,
             {
               headers: {
-                Authorization: `Bearer ${this.apiKey}`,
+                "X-BB-API-Key": this.apiKey,
               },
             },
           );
@@ -162,24 +162,46 @@ class BrowserbaseFramework {
       }
 
       // Handle specific Browserbase API errors
-      let errorMessage = error.message;
+      let errorMessage;
+      
       if (error.response) {
-        errorMessage = `Browserbase API Error ${error.response.status}: ${error.response.data?.message || error.message}`;
+        if (error.response.status === 403) {
+          errorMessage = "Browserbase API authentication failed";
+          userMessage = "The Browserbase cloud service authentication failed. This could be due to an expired or invalid API key.";
+          suggestion = "Please check your Browserbase API key or contact support. Try using Playwright framework instead.";
+        } else if (error.response.status === 404) {
+          errorMessage = "Browserbase API endpoint not found";
+          userMessage = "The Browserbase cloud service endpoint could not be found. The API may have changed.";
+          suggestion = "This might be a temporary issue. Try again later or use Playwright framework.";
+        } else {
+          errorMessage = `Browserbase API Error ${error.response.status}`;
+          userMessage = `The Browserbase cloud service returned an error (${error.response.status}). This might be a temporary service issue.`;
+          suggestion = "Try again in a few minutes or use Playwright framework.";
+        }
       } else if (error.code === 'ECONNABORTED') {
-        errorMessage = "Browserbase API timeout - request took too long";
+        errorMessage = "Browserbase API timeout";
+        userMessage = "The Browserbase cloud service took too long to respond. This might be due to high server load.";
+        suggestion = "Try again or use Playwright framework for faster processing.";
       } else if (error.code === 'ENOTFOUND') {
-        errorMessage = "Browserbase API endpoint not found - check BROWSERBASE_API_URL";
+        errorMessage = "Browserbase API endpoint not found";
+        userMessage = "Cannot connect to the Browserbase cloud service. This might be a network or configuration issue.";
+        suggestion = "Check your internet connection or try using Playwright framework.";
+      } else {
+        errorMessage = "Browserbase API error";
+        userMessage = "An unexpected error occurred with the Browserbase cloud service.";
       }
 
       return {
         success: false,
         error: errorMessage,
+        message: userMessage,
         framework: "browserbase",
         processingTime: "3s",
         cloudInstances: 1,
         mcpProtocol: "v1.0",
         apiError: true,
         sessionId: sessionId || "failed",
+        technicalDetails: error.message,
       };
     }
   }
@@ -230,7 +252,7 @@ class BrowserbaseFramework {
         `${this.apiUrl}/sessions?projectId=${this.projectId}`,
         {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
+            "X-BB-API-Key": this.apiKey,
           },
         },
       );
