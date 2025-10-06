@@ -41,10 +41,6 @@ class BrowserbaseFramework {
         `${this.apiUrl}/sessions`,
         {
           projectId: this.projectId,
-          configuration: {
-            headless: true,
-            viewport: { width: 1280, height: 720 },
-          },
         },
         {
           headers: {
