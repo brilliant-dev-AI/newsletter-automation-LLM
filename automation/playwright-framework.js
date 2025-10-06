@@ -101,8 +101,19 @@ class PlaywrightFramework {
       // Random delay to mimic human behavior
       await new Promise((resolve) => setTimeout(resolve, Math.random() * 3000 + 2000));
 
-      // Enhanced email selectors for better detection
+      // Enhanced email selectors for newsletter-specific detection
       const emailSelectors = [
+        // Newsletter-specific selectors first
+        'form[action*="subscribe"] input[type="email"]',
+        'form[action*="newsletter"] input[type="email"]',
+        'form[action*="signup"] input[type="email"]',
+        '.newsletter input[type="email"]',
+        '.subscribe input[type="email"]',
+        '.signup input[type="email"]',
+        '[class*="newsletter"] input[type="email"]',
+        '[class*="subscribe"] input[type="email"]',
+        '[class*="signup"] input[type="email"]',
+        // General email selectors
         'input[type="email"]',
         'input[name*="email" i]',
         'input[id*="email" i]',
@@ -207,10 +218,9 @@ class PlaywrightFramework {
         return {
           success: false,
           error: "Found email field but no submit button",
-          message: "The newsletter signup form was found but the submit button couldn't be located. This might be a complex form or the button has unusual styling.",
           framework: "playwright",
           processingTime: "3s",
-          suggestion: "The form might require additional steps or have a different submit mechanism",
+          technicalDetails: "Email field found but no corresponding submit button - this may not be a newsletter signup form",
         };
       }
 
@@ -238,8 +248,10 @@ class PlaywrightFramework {
       }
 
       return {
-        success: true,
-        message: "Newsletter form submitted successfully",
+        success: successFound,
+        message: successFound 
+          ? "Newsletter form submitted successfully" 
+          : "Form submitted but success not confirmed",
         framework: "playwright",
         processingTime: "4s",
         selectorsUsed: emailSelectors.length + submitSelectors.length,
