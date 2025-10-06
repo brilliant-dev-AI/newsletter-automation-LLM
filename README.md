@@ -2,7 +2,7 @@
 
 Production-ready newsletter automation platform with multi-framework support and AI-powered link extraction.
 
-**🔗 Live Demo:** https://d3h2cnptvg31ji.cloudfront.net
+**🔗 Live Demo:** https://d1jjgd52ppf516.cloudfront.net
 
 ---
 
