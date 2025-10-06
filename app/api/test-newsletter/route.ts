@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import EmailService from '../../../lib/email-service.js';
+import { NextRequest, NextResponse } from "next/server";
+import EmailService from "../../../lib/email-service.js";
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🧪 Testing newsletter processing and n8n integration...');
-    
+    console.log("🧪 Testing newsletter processing and n8n integration...");
+
     // Create a test email service instance
     const emailService = new EmailService();
-    
+
     // Mock newsletter email data for testing
     const testEmailData = {
       id: `test-email-${Date.now()}`,
-      from: 'newsletter@example.com',
-      subject: 'Weekly Tech Newsletter - Test Edition',
+      from: "newsletter@example.com",
+      subject: "Weekly Tech Newsletter - Test Edition",
       date: new Date().toISOString(),
       body: `
         Welcome to our weekly tech newsletter!
@@ -51,54 +51,63 @@ export async function POST(request: NextRequest) {
           </body>
         </html>
       `,
-      raw: 'Mock email raw content',
+      raw: "Mock email raw content",
       headers: {},
-      attachments: []
+      attachments: [],
     };
-    
-    console.log('📧 Processing test newsletter email...');
-    
+
+    console.log("📧 Processing test newsletter email...");
+
     // Process the test email (this will trigger n8n integration)
     const result = await emailService.processIncomingEmail(testEmailData);
-    
+
     if (result.success) {
       console.log(`✅ Test completed successfully!`);
       console.log(`📊 Extracted ${result.linksExtracted} links`);
       console.log(`🔗 Email ID: ${result.emailId}`);
-      
+
       return NextResponse.json({
         success: true,
-        message: 'Newsletter processing and n8n integration test completed successfully',
+        message:
+          "Newsletter processing and n8n integration test completed successfully",
         emailId: result.emailId,
         linksExtracted: result.linksExtracted,
         links: result.links,
-        n8nIntegration: process.env.N8N_WEBHOOK_URL ? 'Enabled' : 'Disabled (no webhook URL configured)'
+        n8nIntegration: process.env.N8N_WEBHOOK_URL
+          ? "Enabled"
+          : "Disabled (no webhook URL configured)",
       });
     } else {
-      console.error('❌ Test failed:', result.error);
-      return NextResponse.json({
-        success: false,
-        error: result.error,
-        message: 'Newsletter processing test failed'
-      }, { status: 500 });
+      console.error("❌ Test failed:", result.error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error,
+          message: "Newsletter processing test failed",
+        },
+        { status: 500 },
+      );
     }
-    
   } catch (error) {
-    console.error('❌ Test endpoint error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      message: 'Test endpoint failed'
-    }, { status: 500 });
+    console.error("❌ Test endpoint error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Test endpoint failed",
+      },
+      { status: 500 },
+    );
   }
 }
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Newsletter processing and n8n integration test endpoint',
-    usage: 'POST to this endpoint to test newsletter processing and n8n integration',
-    n8nStatus: process.env.N8N_WEBHOOK_URL ? 'Configured' : 'Not configured',
-    environment: process.env.NODE_ENV || 'development'
+    message: "Newsletter processing and n8n integration test endpoint",
+    usage:
+      "POST to this endpoint to test newsletter processing and n8n integration",
+    n8nStatus: process.env.N8N_WEBHOOK_URL ? "Configured" : "Not configured",
+    environment: process.env.NODE_ENV || "development",
   });
 }

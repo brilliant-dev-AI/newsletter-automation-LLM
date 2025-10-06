@@ -3,13 +3,19 @@
 import { useState } from "react";
 
 interface NewsletterFormProps {
-  onSubmit: (url: string, email: string, framework: "playwright" | "skyvern" | "browserbase") => void;
+  onSubmit: (
+    url: string,
+    email: string,
+    framework: "playwright" | "skyvern" | "browserbase",
+  ) => void;
 }
 
 export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
   const [url, setUrl] = useState("");
   const [email, setEmail] = useState("");
-  const [framework, setFramework] = useState<"playwright" | "skyvern" | "browserbase">("playwright");
+  const [framework, setFramework] = useState<
+    "playwright" | "skyvern" | "browserbase"
+  >("playwright");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,14 +37,17 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
   const frameworkOptions = [
     { value: "playwright" as const, label: "Playwright" },
     { value: "skyvern" as const, label: "Skyvern" },
-    { value: "browserbase" as const, label: "Browserbase" }
+    { value: "browserbase" as const, label: "Browserbase" },
   ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* URL Input */}
       <div>
-        <label htmlFor="url" className="block text-sm font-medium text-gray-900 mb-2">
+        <label
+          htmlFor="url"
+          className="block text-sm font-medium text-gray-900 mb-2"
+        >
           Website URL
         </label>
         <input
@@ -54,7 +63,10 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
 
       {/* Email Input */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-900 mb-2"
+        >
           Email Address
         </label>
         <input
@@ -88,7 +100,9 @@ export function NewsletterForm({ onSubmit }: NewsletterFormProps) {
                 name="framework"
                 value={option.value}
                 checked={framework === option.value}
-                onChange={(e) => setFramework(e.target.value as typeof framework)}
+                onChange={(e) =>
+                  setFramework(e.target.value as typeof framework)
+                }
                 className="sr-only"
               />
               <span className="text-sm font-medium">{option.label}</span>
