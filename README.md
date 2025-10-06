@@ -2,7 +2,7 @@
 
 A production-ready newsletter automation platform that automatically signs up for newsletters and extracts links using AI-powered automation frameworks.
 
-**🔗 Live Demo:** https://d1jjgd52ppf516.cloudfront.net
+**🔗 Live Demo:** https://d3h2cnptvg31ji.cloudfront.net
 
 ---
 
@@ -202,7 +202,7 @@ I deployed my system to production and tested it thoroughly:
 
 **Production System Testing**
 
-**Live System:** https://d1jjgd52ppf516.cloudfront.net
+**Live System:** https://d3h2cnptvg31ji.cloudfront.net
 **Testing Date:** October 2025
 **Environment:** Production AWS infrastructure
 
@@ -366,7 +366,7 @@ The production testing revealed robust performance across all core functionaliti
 
 The system is ready for production use and serves as a solid foundation for future enhancements. The modular architecture allows me to add new features incrementally while maintaining the reliability and performance I've achieved.
 
-**Live System:** https://d1jjgd52ppf516.cloudfront.net  
+**Live System:** https://d3h2cnptvg31ji.cloudfront.net  
 **GitHub Repository:** Complete source code and documentation available
 
 ---
