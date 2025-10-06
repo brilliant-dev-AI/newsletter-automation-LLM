@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MOCK_LINKS, type Link } from "../lib/mock-data";
+
+interface Link {
+  id: string;
+  emailId: string;
+  url: string;
+  text: string;
+  context: string;
+  category: string;
+  relevance: number;
+  extractionMethod: string;
+  extractedAt: string;
+  processed: boolean;
+}
 
 interface LinksDisplayProps {
   className?: string;
@@ -19,17 +31,9 @@ export function LinksDisplay({ className = "" }: LinksDisplayProps) {
   const fetchLinks = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // Use mock data for local development
-      if (process.env.NODE_ENV === "development") {
-        setTimeout(() => {
-          setLinks(MOCK_LINKS);
-          setLoading(false);
-        }, 1000); // Simulate loading delay
-        return;
-      }
-
-      // Production: fetch real data
+      // Always fetch real data from API
       const response = await fetch("/api/links");
       const data = await response.json();
 
@@ -41,9 +45,7 @@ export function LinksDisplay({ className = "" }: LinksDisplayProps) {
     } catch (err) {
       setError("Network error while fetching links");
     } finally {
-      if (process.env.NODE_ENV !== "development") {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
