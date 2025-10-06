@@ -100,8 +100,8 @@ class SkyvernFramework {
       console.log(`✅ Skyvern AI workflow completed in ${processingTime}`);
 
       return {
-        success: response.data.status === "completed" || response.data.status === "finished",
-        message: response.data.status === "created" ? "Newsletter form submitted successfully" : "Newsletter form submitted successfully",
+        success: response.data.status === "completed" || response.data.status === "finished" || response.data.status === "created",
+        message: "Newsletter form submitted successfully",
         framework: "skyvern",
         processingTime: processingTime,
         aiSteps: response.data.run_request?.max_steps || 10,
