@@ -1083,9 +1083,40 @@ async function runAutomation(url, email, framework) {
       );
 
       // Enhanced email field detection with more patterns
-      const emailField = await page.$(
-        'input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i], input[placeholder*="Enter your email" i], input[placeholder*="Subscribe" i], input[name*="subscribe" i], input[id*="subscribe" i], input[class*="subscribe" i], input[placeholder*="newsletter" i], input[name*="newsletter" i], input[id*="newsletter" i], input[class*="newsletter" i], input[placeholder*="signup" i], input[name*="signup" i], input[id*="signup" i], input[class*="signup" i], input[placeholder*="join" i], input[name*="join" i], input[id*="join" i], input[class*="join" i], input[placeholder*="get updates" i], input[name*="updates" i], input[id*="updates" i], input[class*="updates" i], input[name="email_address"], input[name="EMAIL"], input[name="emailAddress"], input[name="user_email"], input[name="userEmail"], input[name="subscriber_email"], input[name="subscriberEmail"], input[name="newsletter_email"], input[name="newsletterEmail"]',
-      );
+      // EXCLUDE our own application's form fields to avoid false positives
+      const emailField = await page.evaluate(() => {
+        const emailInputs = document.querySelectorAll('input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i], input[placeholder*="Enter your email" i], input[placeholder*="Subscribe" i], input[name*="subscribe" i], input[id*="subscribe" i], input[class*="subscribe" i], input[placeholder*="newsletter" i], input[name*="newsletter" i], input[id*="newsletter" i], input[class*="newsletter" i], input[placeholder*="signup" i], input[name*="signup" i], input[id*="signup" i], input[class*="signup" i], input[placeholder*="join" i], input[name*="join" i], input[id*="join" i], input[class*="join" i], input[placeholder*="get updates" i], input[name*="updates" i], input[id*="updates" i], input[class*="updates" i], input[name="email_address"], input[name="EMAIL"], input[name="emailAddress"], input[name="user_email"], input[name="userEmail"], input[name="subscriber_email"], input[name="subscriberEmail"], input[name="newsletter_email"], input[name="newsletterEmail"]');
+        
+        // Filter out our own application's form fields
+        for (const input of emailInputs) {
+          const form = input.closest('form');
+          if (form) {
+            // Check if this is our own application's form (has our specific classes or structure)
+            const formClasses = form.className;
+            const hasOurAppClasses = formClasses.includes('space-y-5') || 
+                                   formClasses.includes('bg-white') ||
+                                   form.querySelector('input[name="framework"]') ||
+                                   form.querySelector('button[type="submit"]:has-text("Start Automation")');
+            
+            if (hasOurAppClasses) {
+              console.log('Skipping our own application form field');
+              continue;
+            }
+          }
+          
+          // Check if input is in our application's container
+          const container = input.closest('.max-w-6xl, .bg-white.rounded-xl');
+          if (container && container.textContent.includes('Newsletter Automation')) {
+            console.log('Skipping email field in our own application');
+            continue;
+          }
+          
+          // This looks like a legitimate newsletter signup form
+          return input;
+        }
+        
+        return null;
+      });
 
       if (emailField) {
         console.log(`✅ Found newsletter signup on given URL: ${url}`);
@@ -1252,9 +1283,40 @@ async function runAutomation(url, email, framework) {
             );
 
             // Enhanced email field detection with more patterns
-            const emailField = await page.$(
-              'input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i], input[placeholder*="Enter your email" i], input[placeholder*="Subscribe" i], input[name*="subscribe" i], input[id*="subscribe" i], input[class*="subscribe" i], input[placeholder*="newsletter" i], input[name*="newsletter" i], input[id*="newsletter" i], input[class*="newsletter" i], input[placeholder*="signup" i], input[name*="signup" i], input[id*="signup" i], input[class*="signup" i], input[placeholder*="join" i], input[name*="join" i], input[id*="join" i], input[class*="join" i], input[placeholder*="get updates" i], input[name*="updates" i], input[id*="updates" i], input[class*="updates" i], input[name="email_address"], input[name="EMAIL"], input[name="emailAddress"], input[name="user_email"], input[name="userEmail"], input[name="subscriber_email"], input[name="subscriberEmail"], input[name="newsletter_email"], input[name="newsletterEmail"]',
-            );
+            // EXCLUDE our own application's form fields to avoid false positives
+            const emailField = await page.evaluate(() => {
+              const emailInputs = document.querySelectorAll('input[type="email"], input[type="text"][name="email"], input[name="email"], input[name*="email" i], input[id*="email" i], input[placeholder*="email" i], input[placeholder*="Email" i], input[placeholder*="Your email ..." i], input[class*="email" i], input[aria-label*="email" i], input[placeholder*="Enter your email" i], input[placeholder*="Subscribe" i], input[name*="subscribe" i], input[id*="subscribe" i], input[class*="subscribe" i], input[placeholder*="newsletter" i], input[name*="newsletter" i], input[id*="newsletter" i], input[class*="newsletter" i], input[placeholder*="signup" i], input[name*="signup" i], input[id*="signup" i], input[class*="signup" i], input[placeholder*="join" i], input[name*="join" i], input[id*="join" i], input[class*="join" i], input[placeholder*="get updates" i], input[name*="updates" i], input[id*="updates" i], input[class*="updates" i], input[name="email_address"], input[name="EMAIL"], input[name="emailAddress"], input[name="user_email"], input[name="userEmail"], input[name="subscriber_email"], input[name="subscriberEmail"], input[name="newsletter_email"], input[name="newsletterEmail"]');
+              
+              // Filter out our own application's form fields
+              for (const input of emailInputs) {
+                const form = input.closest('form');
+                if (form) {
+                  // Check if this is our own application's form (has our specific classes or structure)
+                  const formClasses = form.className;
+                  const hasOurAppClasses = formClasses.includes('space-y-5') || 
+                                         formClasses.includes('bg-white') ||
+                                         form.querySelector('input[name="framework"]') ||
+                                         form.querySelector('button[type="submit"]:has-text("Start Automation")');
+                  
+                  if (hasOurAppClasses) {
+                    console.log('Skipping our own application form field');
+                    continue;
+                  }
+                }
+                
+                // Check if input is in our application's container
+                const container = input.closest('.max-w-6xl, .bg-white.rounded-xl');
+                if (container && container.textContent.includes('Newsletter Automation')) {
+                  console.log('Skipping email field in our own application');
+                  continue;
+                }
+                
+                // This looks like a legitimate newsletter signup form
+                return input;
+              }
+              
+              return null;
+            });
             if (emailField) {
               console.log(
                 `✅ Found newsletter signup at header/footer link: ${href}`,
