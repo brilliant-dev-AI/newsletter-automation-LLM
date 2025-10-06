@@ -219,7 +219,7 @@ class UnifiedAutomationService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error.message || "Playwright automation failed - element not clickable or not found",
         framework: "playwright",
         processingTime: "2s",
       };
@@ -309,7 +309,7 @@ class UnifiedAutomationService {
       console.log(`❌ Skyvern API error: ${error.message}`);
       return {
         success: false,
-        error: error.message,
+        error: error.message || "Skyvern API call failed - element not clickable or not found",
         framework: "skyvern",
         processingTime: "2.5s",
       };
@@ -415,7 +415,7 @@ class UnifiedAutomationService {
       console.log(`❌ Browserbase API error: ${error.message}`);
       return {
         success: false,
-        error: error.message,
+        error: error.message || "Browserbase API call failed - element not clickable or not found",
         framework: "browserbase",
         processingTime: "3s",
         cloudInstances: 1,
@@ -1304,7 +1304,12 @@ async function runAutomation(url, email, framework) {
     }
   } catch (error) {
     console.error("❌ Automation error:", error.message);
-    throw error;
+    return {
+      success: false,
+      error: error.message || "Automation failed - element not clickable or not found",
+      framework: framework.toLowerCase(),
+      processingTime: "1s",
+    };
   } finally {
     if (browser) {
       try {

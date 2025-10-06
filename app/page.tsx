@@ -48,7 +48,7 @@ export default function Home() {
 
       const data = await response.json();
 
-      if (response.ok && data.success && data.result.success) {
+      if (response.ok && data.success && data.result?.success) {
         // Update the newsletter status to completed
         setNewsletters((prev) =>
           prev.map((n) =>
@@ -163,7 +163,7 @@ export default function Home() {
 
       const data = await response.json();
 
-      if (response.ok && data.success && data.result.success) {
+      if (response.ok && data.success && data.result?.success) {
         // Update the newsletter status to completed only if automation actually succeeded
         setNewsletters((prev) =>
           prev.map((n) =>

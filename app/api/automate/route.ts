@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Automation completed for ${framework}`);
 
     return NextResponse.json({
-      success: true,
+      success: result.success,
       result: result,
     });
   } catch (error) {
