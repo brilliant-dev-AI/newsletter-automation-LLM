@@ -113,28 +113,11 @@ class SkyvernFramework {
     } catch (error) {
       console.error(`❌ Skyvern API error: ${error.message}`);
       
-      // Handle specific Skyvern API errors
-      let errorMessage;
-      
-      if (error.response) {
-        if (error.response.status === 403) {
-          errorMessage = "Skyvern API authentication failed";
-        } else if (error.response.status === 404) {
-          errorMessage = "Skyvern API endpoint not found";
-        } else {
-          errorMessage = `Skyvern API Error ${error.response.status}`;
-        }
-      } else if (error.code === 'ECONNABORTED') {
-          errorMessage = "Skyvern API timeout";
-      } else if (error.code === 'ENOTFOUND') {
-          errorMessage = "Skyvern API endpoint not found";
-      } else {
-          errorMessage = "Skyvern API error";
-      }
+      const { getUnifiedErrorMessage } = require("../lib/error-messages.js");
 
       return {
         success: false,
-        error: errorMessage,
+        error: getUnifiedErrorMessage(error, "skyvern"),
         framework: "skyvern",
         processingTime: "2.5s",
         apiError: true,

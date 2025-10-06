@@ -245,31 +245,11 @@ class PlaywrightFramework {
         selectorsUsed: emailSelectors.length + submitSelectors.length,
       };
     } catch (error) {
-      // Enhanced error handling for anti-bot detection
-      let errorMessage = "Automation failed due to technical issue";
-      let userMessage = `Playwright encountered an error: ${error.message}`;
+      const { getUnifiedErrorMessage, getProcessingTime } = require("../lib/error-messages.js");
       
-      if (error.message.includes("timeout")) {
-        errorMessage = "Automation timed out - website may have anti-bot protection";
-        userMessage = "The website took too long to respond. This often indicates anti-bot protection or slow loading.";
-      } else if (error.message.includes("cloudflare") || error.message.includes("bot detection") || error.message.includes("anti-bot")) {
-        errorMessage = "Anti-bot protection detected";
-        userMessage = "The website detected automated access and blocked the request.";
-      } else if (error.message.includes("403") || error.message.includes("Forbidden")) {
-        errorMessage = "Access forbidden - anti-bot protection";
-        userMessage = "The website blocked access, likely due to anti-bot protection.";
-      } else if (error.message.includes("429") || error.message.includes("Too Many Requests")) {
-        errorMessage = "Rate limited";
-        userMessage = "Too many requests to this website. Try again later.";
-      } else if (error.message.includes("captcha") || error.message.includes("CAPTCHA")) {
-        errorMessage = "CAPTCHA detected";
-        userMessage = "The website requires human verification (CAPTCHA).";
-      }
-
       return {
         success: false,
-        error: errorMessage,
-        message: userMessage,
+        error: getUnifiedErrorMessage(error, "playwright"),
         framework: "playwright",
         processingTime: "2s",
         technicalDetails: error.message,
