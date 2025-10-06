@@ -13,6 +13,7 @@ interface Newsletter {
   lastProcessed: string | null;
   framework: "playwright" | "skyvern" | "browserbase";
   errorMessage?: string;
+  processingTime?: string;
 }
 
 export default function Home() {
@@ -102,54 +103,23 @@ export default function Home() {
   ) => {
     console.log("Submitting newsletter signup:", { url, email, framework });
 
-    // Use functional update to ensure we have the latest state
-    setNewsletters((prev) => {
-      // Check if this exact combination already exists
-      const existingNewsletter = prev.find(
-        (n) => n.url === url && n.email === email,
-      );
+    // Always create a new entry for each framework attempt
+    const newNewsletter: Newsletter = {
+      id: `${Date.now()}-${framework}`, // Unique ID with framework
+      url,
+      status: "processing",
+      email,
+      linksCount: 0,
+      lastProcessed: null,
+      framework,
+    };
+    
+    console.log("➕ Adding new automation attempt:", newNewsletter.id);
+    
+    setNewsletters((prev) => [newNewsletter, ...prev]);
 
-      // Prevent duplicate submissions if already processing
-      if (existingNewsletter && existingNewsletter.status === "processing") {
-        console.log(
-          "⚠️ Newsletter already being processed, skipping duplicate submission",
-        );
-        return prev; // Return unchanged state
-      }
-
-      if (existingNewsletter) {
-        // Update existing entry
-        console.log("🔄 Updating existing newsletter:", existingNewsletter.id);
-        return prev.map((n) =>
-          n.id === existingNewsletter.id
-            ? {
-                ...n,
-                status: "processing" as const,
-                framework,
-                errorMessage: undefined,
-              }
-            : n,
-        );
-      } else {
-        // Add new entry
-        const newNewsletter: Newsletter = {
-          id: Date.now().toString(),
-          url,
-          status: "processing",
-          email,
-          linksCount: 0,
-          lastProcessed: null,
-          framework,
-        };
-        console.log("➕ Adding new newsletter:", newNewsletter.id);
-        return [newNewsletter, ...prev];
-      }
-    });
-
-    // Get the newsletter ID for the API call
-    const newsletterId =
-      newsletters.find((n) => n.url === url && n.email === email)?.id ||
-      Date.now().toString();
+    // Use the new newsletter ID for the API call
+    const newsletterId = newNewsletter.id;
 
     try {
       // Call our automation API
@@ -173,6 +143,7 @@ export default function Home() {
                   status: "completed" as const,
                   linksCount: 1,
                   lastProcessed: new Date().toISOString(),
+                  processingTime: data.result?.processingTime || "Unknown",
                 }
               : n,
           ),
@@ -187,8 +158,8 @@ export default function Home() {
               ? {
                   ...n,
                   status: "error" as const,
-                  errorMessage:
-                    data.result?.error || data.error || "Automation failed",
+                  errorMessage: data.result?.error || data.error || "Automation failed",
+                  processingTime: data.result?.processingTime || "Unknown",
                 }
               : n,
           ),
@@ -334,15 +305,31 @@ export default function Home() {
                         <p className="text-xs text-gray-600 truncate">
                           {newsletter.email}
                         </p>
-                        {newsletter.status === "error" &&
-                          newsletter.errorMessage && (
-                            <p className="text-xs text-red-600 mt-1 truncate">
-                              {newsletter.errorMessage}
-                            </p>
-                          )}
+                        {newsletter.status === "error" && newsletter.errorMessage && (
+                          <p className="text-xs text-red-600 mt-1 truncate">
+                            {newsletter.errorMessage}
+                          </p>
+                        )}
+                        {newsletter.processingTime && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            ⏱️ {newsletter.processingTime}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
+                      {/* Framework Badge */}
+                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                        newsletter.framework === 'playwright' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : newsletter.framework === 'skyvern'
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {newsletter.framework}
+                      </span>
+                      
+                      {/* Status Badge */}
                       {newsletter.status === "completed" && (
                         <span className="px-2 py-1 rounded-md text-xs font-medium bg-teal-100 text-teal-700">
                           ✓ Completed
