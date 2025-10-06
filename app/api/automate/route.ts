@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runAutomation } from "../../../automation/unified-automation.js";
+
+// Import the three framework files directly
+const PlaywrightFramework = require("../../../automation/playwright-framework.js");
+const SkyvernFramework = require("../../../automation/skyvern-framework.js");
+const BrowserbaseFramework = require("../../../automation/browserbase-framework.js");
 
 export async function POST(request: NextRequest) {
+  let frameworkInstance = null;
+
   try {
     const { url, email, framework } = await request.json();
 
@@ -12,10 +18,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🚀 Starting automation for ${framework} on ${url}`);
+    console.log(`🚀 Starting ${framework} automation on ${url}`);
+
+    // Initialize the specific framework
+    switch (framework.toLowerCase()) {
+      case "playwright":
+        frameworkInstance = new PlaywrightFramework();
+        await frameworkInstance.init();
+        break;
+      case "skyvern":
+        frameworkInstance = new SkyvernFramework();
+        await frameworkInstance.init();
+        break;
+      case "browserbase":
+        frameworkInstance = new BrowserbaseFramework();
+        await frameworkInstance.init();
+        break;
+      default:
+        return NextResponse.json(
+          { error: `Unknown framework: ${framework}` },
+          { status: 400 },
+        );
+    }
 
     // Run the automation with timeout
-    const automationPromise = runAutomation(url, email, framework);
+    const automationPromise = frameworkInstance.runAutomation(url, email);
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(
         () => reject(new Error("Automation timeout after 55 seconds")),
@@ -25,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     const result = await Promise.race([automationPromise, timeoutPromise]);
 
-    console.log(`✅ Automation completed for ${framework}`);
+    console.log(`✅ ${framework} automation completed`);
 
     return NextResponse.json({
       success: (result as any).success,
@@ -34,7 +61,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("❌ Automation API error:", error);
 
-    // Handle specific Lambda/browser errors
+    // Handle specific errors
     let errorMessage = "Automation failed";
     if (error instanceof Error) {
       if (error.message.includes("Browser not available on Lambda")) {
@@ -55,6 +82,15 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 },
     );
+  } finally {
+    // Cleanup framework instance
+    if (frameworkInstance && typeof frameworkInstance.cleanup === 'function') {
+      try {
+        await frameworkInstance.cleanup();
+      } catch (cleanupError) {
+        console.error("⚠️ Framework cleanup error:", cleanupError);
+      }
+    }
   }
 }
 
