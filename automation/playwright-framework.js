@@ -92,9 +92,24 @@ class PlaywrightFramework {
         timeout: 60000, // Increased timeout for slow sites
       });
       
-      // Check for common anti-bot indicators
+      // Check for common anti-bot indicators (more specific detection)
       const pageContent = await this.page.content();
-      if (pageContent.includes("cloudflare") || pageContent.includes("bot detection") || pageContent.includes("access denied") || pageContent.includes("blocked")) {
+      const pageTitle = (await this.page.title()).toLowerCase();
+      const pageUrl = this.page.url();
+      
+      // More specific anti-bot detection
+      const isCloudflareChallenge = pageContent.includes("Just a moment") || 
+                                   pageContent.includes("Checking your browser") ||
+                                   pageContent.includes("DDoS protection by Cloudflare") ||
+                                   pageTitle.includes("just a moment");
+      
+      const isBotDetection = pageContent.includes("bot detection") || 
+                            pageContent.includes("access denied") || 
+                            pageContent.includes("blocked") ||
+                            pageContent.includes("captcha") ||
+                            pageContent.includes("verify you are human");
+      
+      if (isCloudflareChallenge || isBotDetection) {
         throw new Error("Anti-bot protection detected - Cloudflare or similar protection");
       }
       
