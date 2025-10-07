@@ -1,5 +1,6 @@
-// Browserbase Framework Implementation - Using Official SDK
+// Browserbase Framework Implementation - Using Official SDK + Playwright
 const { Browserbase } = require("@browserbasehq/sdk");
+const { chromium } = require("playwright-core");
 require("dotenv").config();
 
 class BrowserbaseFramework {
@@ -8,6 +9,8 @@ class BrowserbaseFramework {
     this.projectId = process.env.BROWSERBASE_PROJECT_ID;
     this.client = null;
     this.sessionId = null;
+    this.browser = null;
+    this.page = null;
   }
 
   async init() {
@@ -24,7 +27,6 @@ class BrowserbaseFramework {
     // Initialize the official Browserbase SDK
     this.client = new Browserbase({
       apiKey: this.apiKey,
-      timeout: 60000, // 60 second timeout
     });
 
     console.log("✅ Browserbase Framework initialized with official SDK");
@@ -45,53 +47,117 @@ class BrowserbaseFramework {
       this.sessionId = session.id;
       console.log(`☁️ Created Browserbase session: ${this.sessionId}`);
 
-      // Load the webpage using Browserbase's load method
-      console.log(`🌐 Loading webpage: ${url}`);
-      const pageContent = await this.client.load(url, {
-        sessionId: this.sessionId,
+      // Connect Playwright to Browserbase's remote browser
+      console.log("🎭 Connecting Playwright to Browserbase session...");
+      this.browser = await chromium.connectOverCDP(session.connectUrl);
+      this.page = await this.browser.newPage();
+
+      // Navigate to the URL
+      console.log(`🌐 Navigating to: ${url}`);
+      await this.page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: 60000,
       });
 
-      // Check for anti-bot protection
-      if (pageContent.includes("cloudflare") || pageContent.includes("bot detection") || 
-          pageContent.includes("access denied") || pageContent.includes("blocked")) {
+      // Check for anti-bot protection (same logic as Playwright framework)
+      const pageContent = await this.page.content();
+      const pageTitle = (await this.page.title()).toLowerCase();
+      
+      const isCloudflareChallenge = pageContent.includes("Just a moment") || 
+                                   pageContent.includes("Checking your browser") ||
+                                   pageContent.includes("DDoS protection by Cloudflare") ||
+                                   pageTitle.includes("just a moment");
+      
+      const isBotDetection = pageContent.includes("bot detection") || 
+                            pageContent.includes("access denied") || 
+                            pageContent.includes("blocked") ||
+                            pageContent.includes("captcha") ||
+                            pageContent.includes("verify you are human");
+      
+      if (isCloudflareChallenge || isBotDetection) {
         throw new Error("Anti-bot protection detected - Cloudflare or similar protection");
       }
 
-      // Use Browserbase's AI capabilities to find and fill email field
-      console.log("🤖 Finding email field with AI...");
-      try {
-        await this.client.ai.findAndFill({
-          sessionId: this.sessionId,
-          description: "Find email input field for newsletter signup",
-          value: email,
-          elementType: "input",
-        });
-        console.log("✅ Email field found and filled");
-      } catch (emailError) {
-        console.warn("⚠️ AI email field detection failed, trying manual approach...");
-        // Fallback to manual field detection if AI fails
-        await this.manualEmailFieldFill(email);
+      // Find and fill email field using Playwright
+      console.log("📧 Finding email field...");
+      const emailSelectors = [
+        'input[type="email"]',
+        'input[name*="email"]',
+        'input[id*="email"]',
+        'input[placeholder*="email" i]',
+        'input[placeholder*="Email" i]',
+        'input[name*="Email"]',
+        'input[id*="Email"]',
+        'input[name="member[email]"]',
+        'input[id="member_email"]',
+        'input[class*="email"]',
+        'input[class*="Email"]',
+      ];
+
+      let emailInput = null;
+      for (const selector of emailSelectors) {
+        try {
+          emailInput = await this.page.waitForSelector(selector, { timeout: 2000 });
+          if (emailInput) break;
+        } catch (e) {
+          // Continue to next selector
+        }
       }
+
+      if (!emailInput) {
+        throw new Error("Email input field not found");
+      }
+
+      await emailInput.fill(email);
+      console.log("✅ Email field found and filled");
 
       // Wait a moment before finding submit button
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Use Browserbase's AI capabilities to find and click submit button
-      console.log("🤖 Finding submit button with AI...");
-      try {
-        await this.client.ai.findAndClick({
-          sessionId: this.sessionId,
-          description: "Find submit or subscribe button for newsletter signup",
-        });
-        console.log("✅ Submit button found and clicked");
-      } catch (submitError) {
-        console.warn("⚠️ AI submit button detection failed, trying manual approach...");
-        // Fallback to manual button detection if AI fails
-        await this.manualSubmitButtonClick();
+      // Find and click submit button using Playwright
+      console.log("🔘 Finding submit button...");
+      const submitSelectors = [
+        'button[type="submit"]',
+        'input[type="submit"]',
+        'button:has-text("Subscribe")',
+        'button:has-text("Sign up")',
+        'button:has-text("Submit")',
+        'input[value*="Subscribe"]',
+        'input[value*="Sign up"]',
+        'input[value*="Submit"]',
+        'button[name*="subscribe"]',
+        'input[name*="subscribe"]',
+        'button[id*="submit"]',
+        'input[id*="submit"]',
+        'button[class*="submit"]',
+        'input[class*="submit"]',
+        'button[class*="subscribe"]',
+        'input[class*="subscribe"]',
+      ];
+
+      let submitButton = null;
+      for (const selector of submitSelectors) {
+        try {
+          submitButton = await this.page.waitForSelector(selector, { timeout: 2000 });
+          if (submitButton) break;
+        } catch (e) {
+          // Continue to next selector
+        }
       }
 
-      // Wait for potential success message or page change
+      if (!submitButton) {
+        throw new Error("Submit button not found");
+      }
+
+      await submitButton.click();
+      console.log("✅ Submit button found and clicked");
+
+      // Wait for potential success message
       await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      // Close browser (session will auto-cleanup)
+      console.log("🔒 Closing browser...");
+      await this.browser.close();
 
       const processingTime = `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
 
@@ -105,13 +171,24 @@ class BrowserbaseFramework {
         cloudInstances: 1,
         mcpProtocol: "v1.0",
         sessionId: this.sessionId,
-        aiUsed: true,
         cloudFeatures: true,
       };
     } catch (error) {
       console.error(`❌ Browserbase automation error: ${error.message}`);
-      
-      const processingTime = `${((Date.now() - Date.now()) / 1000).toFixed(1)}s`;
+
+      // Clean up browser and session
+      if (this.browser) {
+        try {
+          await this.browser.close();
+        } catch (cleanupError) {
+          console.error(`⚠️ Failed to close browser: ${cleanupError.message}`);
+        }
+      }
+
+      // Session will auto-cleanup when browser closes
+      if (this.sessionId) {
+        console.log(`🧹 Session will auto-cleanup: ${this.sessionId}`);
+      }
 
       const { getUnifiedErrorMessage } = require("../lib/error-messages.js");
 
@@ -119,55 +196,17 @@ class BrowserbaseFramework {
         success: false,
         error: getUnifiedErrorMessage(error, "browserbase"),
         framework: "browserbase",
-        processingTime: processingTime,
+        processingTime: "0.0s",
         cloudInstances: 1,
         mcpProtocol: "v1.0",
         apiError: true,
         sessionId: this.sessionId || "failed",
-        aiUsed: true,
         technicalDetails: error.message,
       };
-    } finally {
-      // Clean up Browserbase session
-      await this.cleanup();
     }
-  }
-
-  async manualEmailFieldFill(email) {
-    console.log("🔍 Manual email field detection...");
-    
-    // This is a fallback method - in a real implementation, you might use
-    // Browserbase's element selection capabilities or other methods
-    // For now, we'll simulate the process
-    console.log("📧 Simulating manual email field fill...");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("✅ Manual email field fill completed");
-  }
-
-  async manualSubmitButtonClick() {
-    console.log("🔍 Manual submit button detection...");
-    
-    // This is a fallback method - in a real implementation, you might use
-    // Browserbase's element selection capabilities or other methods
-    // For now, we'll simulate the process
-    console.log("🔘 Simulating manual submit button click...");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("✅ Manual submit button click completed");
   }
 
   async cleanup() {
-    console.log("🧹 Cleaning up Browserbase resources...");
-    
-    try {
-      // Close Browserbase session using the official SDK
-      if (this.sessionId && this.client) {
-        await this.client.sessions.delete(this.sessionId);
-        console.log(`✅ Browserbase session ${this.sessionId} closed`);
-      }
-    } catch (error) {
-      console.error("⚠️ Error closing Browserbase session:", error.message);
-    }
-
     console.log("✅ Browserbase Framework cleanup completed");
   }
 
@@ -178,41 +217,6 @@ class BrowserbaseFramework {
     if (url.includes("axios")) return 0.75;
     if (url.includes("techcrunch")) return 0.7;
     return 0.8;
-  }
-
-  // Helper method to validate API configuration
-  async validateConfiguration() {
-    try {
-      const projects = await this.client.projects.list();
-      
-      return {
-        valid: true,
-        message: "Browserbase API is accessible",
-        projectId: this.projectId,
-        projectsCount: projects.length,
-      };
-    } catch (error) {
-      return {
-        valid: false,
-        error: error.message,
-        message: "Browserbase API is not accessible",
-        projectId: this.projectId,
-      };
-    }
-  }
-
-  // Helper method to list active sessions
-  async listActiveSessions() {
-    try {
-      const sessions = await this.client.sessions.list({
-        projectId: this.projectId,
-      });
-      
-      return sessions;
-    } catch (error) {
-      console.error("Failed to list active sessions:", error.message);
-      return [];
-    }
   }
 }
 
