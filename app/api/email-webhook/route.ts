@@ -18,8 +18,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Debug: Log the full payload structure
+    console.log("🔍 Full webhook payload:", JSON.stringify(emailData, null, 2));
     console.log(`📧 Processing email from: ${emailData.from || "Unknown"}`);
     console.log(`📧 Subject: ${emailData.subject || "No subject"}`);
+    console.log(`📧 Available fields: ${Object.keys(emailData).join(", ")}`);
 
     // Create email service instance
     const emailService = new EmailService();
@@ -42,12 +45,17 @@ export async function POST(request: NextRequest) {
       });
     } else {
       console.error("❌ Email processing failed:", result.error);
+      console.error("❌ Full error details:", JSON.stringify(result, null, 2));
 
       return NextResponse.json(
         {
           success: false,
           error: result.error,
           message: "Email processing failed",
+          debug: {
+            skipped: result.skipped,
+            fullError: result,
+          },
         },
         { status: 500 },
       );
