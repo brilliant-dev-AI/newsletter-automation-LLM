@@ -60,7 +60,7 @@ export default $config({
         LINKS_TABLE: linksTable.name,
       },
       server: {
-        timeout: "300 seconds", // Increased to handle Skyvern tasks that can take up to 5 minutes
+        timeout: "120 seconds", // Reduced to match CloudFront's maximum timeout
         memory: "1024 MB", // Increased memory for better performance
       },
       permissions: [

@@ -30,7 +30,7 @@ class SkyvernFramework {
       const startTime = Date.now();
 
       // Create a simple, clear prompt for newsletter subscription
-      const prompt = `Go to ${url} and subscribe to the newsletter using the email address: ${email}. Find the email input field, enter the email, and click the submit/subscribe button.`;
+      const prompt = `Subscribe to newsletter at ${url} with email: ${email}`;
 
       console.log(`🚀 Sending Skyvern task with prompt: ${prompt}`);
 
@@ -41,9 +41,9 @@ class SkyvernFramework {
           prompt: prompt,
           url: url,
           engine: "skyvern-1.0", // Good for simple tasks like filling forms
-          max_steps: 10, // Reasonable limit to avoid high costs
+          max_steps: 3, // Reduced for faster newsletter signup (navigate, fill, submit)
           title: "Newsletter Subscription",
-          proxy_location: "RESIDENTIAL", // Use residential proxy for better success
+          proxy_location: "RESIDENTIAL", // Use residential proxy for better success rates
         },
         {
           headers: {
@@ -93,7 +93,7 @@ class SkyvernFramework {
   }
 
   async pollForCompletion(runId, startTime) {
-    const maxWaitTime = 300000; // 5 minutes max wait (Skyvern tasks can take longer)
+    const maxWaitTime = 100000; // 100 seconds max wait (within 120s server timeout)
     const pollInterval = 5000; // Poll every 5 seconds (less frequent polling)
     
     while (Date.now() - startTime < maxWaitTime) {
