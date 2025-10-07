@@ -60,7 +60,7 @@ export default $config({
         LINKS_TABLE: linksTable.name,
       },
       server: {
-        timeout: "120 seconds", // Increased to handle automation processes that may take up to 90s
+        timeout: "300 seconds", // Increased to handle Skyvern tasks that can take up to 5 minutes
         memory: "1024 MB", // Increased memory for better performance
       },
       permissions: [

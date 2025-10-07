@@ -36,7 +36,7 @@ class SkyvernFramework {
 
       // Use the correct Skyvern API endpoint and format from documentation
       const response = await axios.post(
-        `${this.apiUrl}/v1/run/tasks`,
+        `${this.apiUrl}/run/tasks`,
         {
           prompt: prompt,
           url: url,
@@ -93,13 +93,13 @@ class SkyvernFramework {
   }
 
   async pollForCompletion(runId, startTime) {
-    const maxWaitTime = 60000; // 60 seconds max wait
-    const pollInterval = 2000; // Poll every 2 seconds
+    const maxWaitTime = 300000; // 5 minutes max wait (Skyvern tasks can take longer)
+    const pollInterval = 5000; // Poll every 5 seconds (less frequent polling)
     
     while (Date.now() - startTime < maxWaitTime) {
       try {
         const response = await axios.get(
-          `${this.apiUrl}/v1/runs/${runId}`,
+          `${this.apiUrl}/runs/${runId}`,
           {
             headers: {
               "x-api-key": this.apiKey,
@@ -166,7 +166,7 @@ class SkyvernFramework {
     try {
       // Test with a simple task creation
       const response = await axios.post(
-        `${this.apiUrl}/v1/run/tasks`,
+        `${this.apiUrl}/run/tasks`,
         {
           prompt: "Test connection",
           url: "https://example.com",
