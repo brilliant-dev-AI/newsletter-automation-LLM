@@ -1,4 +1,4 @@
-// Skyvern AI Framework Implementation
+// Skyvern AI Framework Implementation - Fixed according to official API docs
 const axios = require("axios");
 require("dotenv").config();
 
@@ -29,86 +29,52 @@ class SkyvernFramework {
     try {
       const startTime = Date.now();
 
-      const skyvernWorkflow = {
-        url: url,
-        goal: `Subscribe to newsletter using email: ${email}`,
-        steps: [
-          {
-            step: "navigate",
-            action: "go_to_url",
-            parameters: { url: url },
-          },
-          {
-            step: "find_email_field",
-            action: "ai_find_element",
-            parameters: {
-              description: "Find email input field for newsletter signup",
-              element_type: "input",
-              attributes: ["email", "text"],
-            },
-          },
-          {
-            step: "fill_email",
-            action: "ai_fill_field",
-            parameters: {
-              element_description: "Email input field",
-              value: email,
-            },
-          },
-          {
-            step: "find_submit_button",
-            action: "ai_find_element",
-            parameters: {
-              description: "Find submit or subscribe button",
-              element_type: "button",
-              attributes: ["submit", "subscribe", "sign up", "join"],
-            },
-          },
-          {
-            step: "click_submit",
-            action: "ai_click_element",
-            parameters: {
-              element_description: "Newsletter signup submit button",
-            },
-          },
-        ],
-      };
+      // Create a simple, clear prompt for newsletter subscription
+      const prompt = `Go to ${url} and subscribe to the newsletter using the email address: ${email}. Find the email input field, enter the email, and click the submit/subscribe button.`;
 
-      console.log(`🚀 Sending Skyvern task with prompt: Subscribe to newsletter using email: ${email}`);
+      console.log(`🚀 Sending Skyvern task with prompt: ${prompt}`);
 
-      // Use the correct Skyvern API endpoint from documentation
+      // Use the correct Skyvern API endpoint and format from documentation
       const response = await axios.post(
-        `${this.apiUrl}/run/tasks`,
+        `${this.apiUrl}/v1/run/tasks`,
         {
-          prompt: `Subscribe to newsletter using email: ${email}`,
+          prompt: prompt,
           url: url,
           engine: "skyvern-1.0", // Good for simple tasks like filling forms
-          max_steps: 10,
-          title: "Newsletter Subscription"
+          max_steps: 10, // Reasonable limit to avoid high costs
+          title: "Newsletter Subscription",
+          proxy_location: "RESIDENTIAL", // Use residential proxy for better success
         },
         {
           headers: {
-            "x-api-key": this.apiKey,
+            "x-api-key": this.apiKey, // Correct header name from docs
             "Content-Type": "application/json",
           },
           timeout: this.timeout,
         },
       );
 
+      const runId = response.data.run_id;
+      console.log(`📋 Skyvern task created with run_id: ${runId}`);
+
+      // Poll for completion since Skyvern tasks are async
+      const result = await this.pollForCompletion(runId, startTime);
+
       const processingTime = `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
 
       console.log(`✅ Skyvern AI workflow completed in ${processingTime}`);
 
       return {
-        success: response.data.status === "completed" || response.data.status === "finished" || response.data.status === "created",
-        message: "Newsletter form submitted successfully",
+        success: result.success,
+        message: result.success ? "Newsletter form submitted successfully" : result.error,
         framework: "skyvern",
         processingTime: processingTime,
-        aiSteps: response.data.run_request?.max_steps || 10,
-        confidence: 95,
-        apiResponse: response.data,
-        runId: response.data.run_id || "unknown",
-        status: response.data.status,
+        aiSteps: result.maxSteps || 10,
+        confidence: result.success ? 95 : 0,
+        runId: runId,
+        status: result.status,
+        screenshotUrls: result.screenshotUrls || [],
+        recordingUrl: result.recordingUrl,
       };
     } catch (error) {
       console.error(`❌ Skyvern API error: ${error.message}`);
@@ -124,6 +90,62 @@ class SkyvernFramework {
         technicalDetails: error.message,
       };
     }
+  }
+
+  async pollForCompletion(runId, startTime) {
+    const maxWaitTime = 60000; // 60 seconds max wait
+    const pollInterval = 2000; // Poll every 2 seconds
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      try {
+        const response = await axios.get(
+          `${this.apiUrl}/v1/runs/${runId}`,
+          {
+            headers: {
+              "x-api-key": this.apiKey,
+            },
+            timeout: 10000,
+          },
+        );
+
+        const run = response.data;
+        console.log(`📊 Run status: ${run.status}`);
+
+        // Check if task is completed
+        if (run.status === "completed" || run.status === "finished") {
+          return {
+            success: true,
+            status: run.status,
+            maxSteps: run.run_request?.max_steps,
+            screenshotUrls: run.screenshot_urls || [],
+            recordingUrl: run.recording_url,
+            output: run.output,
+          };
+        }
+
+        // Check if task failed
+        if (run.status === "failed" || run.status === "terminated") {
+          return {
+            success: false,
+            error: run.failure_reason || "Task failed",
+            status: run.status,
+          };
+        }
+
+        // Wait before next poll
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+      } catch (error) {
+        console.error(`⚠️ Error polling run status: ${error.message}`);
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+      }
+    }
+
+    // Timeout reached
+    return {
+      success: false,
+      error: "Task timed out - may still be running",
+      status: "timeout",
+    };
   }
 
   async cleanup() {
@@ -142,23 +164,35 @@ class SkyvernFramework {
   // Helper method to validate API configuration
   async validateConfiguration() {
     try {
-      const response = await axios.get(`${this.apiUrl}/health`, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
+      // Test with a simple task creation
+      const response = await axios.post(
+        `${this.apiUrl}/v1/run/tasks`,
+        {
+          prompt: "Test connection",
+          url: "https://example.com",
+          max_steps: 1,
         },
-        timeout: 5000,
-      });
+        {
+          headers: {
+            "x-api-key": this.apiKey,
+            "Content-Type": "application/json",
+          },
+          timeout: 5000,
+        },
+      );
       
       return {
         valid: true,
         status: response.status,
         message: "Skyvern API is accessible",
+        runId: response.data.run_id,
       };
     } catch (error) {
       return {
         valid: false,
         error: error.message,
         message: "Skyvern API is not accessible",
+        statusCode: error.response?.status,
       };
     }
   }

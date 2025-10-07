@@ -60,7 +60,7 @@ export default $config({
         LINKS_TABLE: linksTable.name,
       },
       server: {
-        timeout: "60 seconds", // Increased from default 30s to handle complex sites
+        timeout: "120 seconds", // Increased to handle automation processes that may take up to 90s
         memory: "1024 MB", // Increased memory for better performance
       },
       permissions: [
