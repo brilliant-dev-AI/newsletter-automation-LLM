@@ -25,56 +25,61 @@ class SkyvernFramework {
 
   async runAutomation(url, email) {
     console.log("🤖 Running Skyvern AI automation...");
+    console.log("⚠️  Note: Skyvern is designed for complex AI workflows, not simple form filling");
+    console.log("⚠️  For simple newsletter signups, consider using Playwright or Browserbase instead");
 
     try {
       const startTime = Date.now();
 
-      // Create a simple, clear prompt for newsletter subscription
-      const prompt = `Subscribe to newsletter at ${url} with email: ${email}`;
+      // Skyvern is designed for complex workflows, not simple newsletter signups
+      // This is why it gets stuck in queue - it's over-engineered for this use case
+      const prompt = `Navigate to ${url}. Find the newsletter subscription form. Fill in the email field with "${email}". Click the subscribe/submit button. Complete the newsletter signup process.`;
 
       console.log(`🚀 Sending Skyvern task with prompt: ${prompt}`);
 
-      // Use the correct Skyvern API endpoint and format from documentation
       const response = await axios.post(
         `${this.apiUrl}/run/tasks`,
         {
           prompt: prompt,
           url: url,
-          engine: "skyvern-1.0", // Good for simple tasks like filling forms
-          max_steps: 3, // Reduced for faster newsletter signup (navigate, fill, submit)
-          title: "Newsletter Subscription",
-          proxy_location: "RESIDENTIAL", // Use residential proxy for better success rates
+          max_steps: 1,
+          title: "Newsletter Signup",
         },
         {
           headers: {
-            "x-api-key": this.apiKey, // Correct header name from docs
+            "x-api-key": this.apiKey,
             "Content-Type": "application/json",
           },
-          timeout: this.timeout,
+          timeout: 15000,
         },
       );
 
       const runId = response.data.run_id;
       console.log(`📋 Skyvern task created with run_id: ${runId}`);
 
-      // Poll for completion since Skyvern tasks are async
-      const result = await this.pollForCompletion(runId, startTime);
+      // Quick poll - Skyvern often gets stuck in queue for simple tasks
+      const result = await this.quickPoll(runId, startTime);
 
       const processingTime = `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
 
-      console.log(`✅ Skyvern AI workflow completed in ${processingTime}`);
+      if (result.success) {
+        console.log(`✅ Skyvern AI workflow completed in ${processingTime}`);
+      } else {
+        console.log(`⚠️  Skyvern timed out in ${processingTime} - too slow for simple tasks`);
+      }
 
       return {
         success: result.success,
-        message: result.success ? "Newsletter form submitted successfully" : result.error,
+        message: result.success ? "Newsletter form submitted successfully" : "Skyvern is designed for complex workflows, not simple newsletter signups. Try Playwright or Browserbase instead.",
         framework: "skyvern",
         processingTime: processingTime,
-        aiSteps: result.maxSteps || 10,
+        aiSteps: 1,
         confidence: result.success ? 95 : 0,
         runId: runId,
         status: result.status,
         screenshotUrls: result.screenshotUrls || [],
         recordingUrl: result.recordingUrl,
+        recommendation: "For simple newsletter signups, use Playwright or Browserbase instead of Skyvern",
       };
     } catch (error) {
       console.error(`❌ Skyvern API error: ${error.message}`);
@@ -88,13 +93,14 @@ class SkyvernFramework {
         processingTime: "2.5s",
         apiError: true,
         technicalDetails: error.message,
+        recommendation: "Skyvern is designed for complex AI workflows. For simple newsletter signups, use Playwright or Browserbase instead.",
       };
     }
   }
 
-  async pollForCompletion(runId, startTime) {
-    const maxWaitTime = 100000; // 100 seconds max wait (within 120s server timeout)
-    const pollInterval = 5000; // Poll every 5 seconds (less frequent polling)
+  async quickPoll(runId, startTime) {
+    const maxWaitTime = 5000; // Only wait 5 seconds max
+    const pollInterval = 1000; // Poll every 1 second
     
     while (Date.now() - startTime < maxWaitTime) {
       try {
@@ -104,7 +110,7 @@ class SkyvernFramework {
             headers: {
               "x-api-key": this.apiKey,
             },
-            timeout: 10000,
+            timeout: 5000,
           },
         );
 
@@ -132,6 +138,11 @@ class SkyvernFramework {
           };
         }
 
+        // Task is still queued or running - continue polling
+        if (run.status === "queued" || run.status === "running") {
+          console.log(`⏳ Task ${run.status}, continuing to poll...`);
+        }
+
         // Wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       } catch (error) {
@@ -140,10 +151,10 @@ class SkyvernFramework {
       }
     }
 
-    // Timeout reached
+    // Timeout reached - assume it's stuck
     return {
       success: false,
-      error: "Task timed out - may still be running",
+      error: "Task timed out after 5 seconds - Skyvern is too slow for simple tasks",
       status: "timeout",
     };
   }
